@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import Router from "./routes";
+import getEmotion from "./util/get-emotion";
 
 function App() {
   // 1."/" 모든일기를 조회하는 폼페이지
@@ -10,15 +11,25 @@ function App() {
   const moveHandle = () => {
     mov("/new");
   };
+
   return (
-    <div>
-      <Link to="/">Home</Link>
-      <Link to="/new">New</Link>
-      <Link to="/diary">Diary</Link>
-      <button onClick={moveHandle}>New 페이지로 이동하기 </button>
-      <h1>감정 일기장</h1>
-      <Router />
-    </div>
+    <>
+      <div>
+        <img src={getEmotion(1)} />
+        <img src={getEmotion(2)} />
+        <img src={getEmotion(3)} />
+        <img src={getEmotion(4)} />
+        <img src={getEmotion(5)} />
+      </div>
+      <div>
+        <Link to="/">Home</Link>
+        <Link to="/new">New</Link>
+        <Link to="/diary">Diary</Link>
+        <button onClick={moveHandle}>New 페이지로 이동하기 </button>
+        <h1>감정 일기장</h1>
+        <Router />
+      </div>
+    </>
   );
 }
 
