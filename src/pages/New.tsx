@@ -1,7 +1,3 @@
 export default function New() {
-  return (
-    <>
-      <div>New</div>
-    </>
-  );
+  return <>작성할 일기장 </>;
 }

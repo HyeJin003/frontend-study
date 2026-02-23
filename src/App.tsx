@@ -1,36 +1,17 @@
-import { Link, useNavigate } from "react-router-dom";
+import Button from "./components/Button";
+import Header from "./components/Header";
 import Router from "./routes";
-import getEmotion from "./util/get-emotion";
 
-function App() {
-  // 1."/" 모든일기를 조회하는 폼페이지
-  // 2. / new 는 새로운 일기를 작성하는 페이지
-  // /diary 일기를 상세히 조회 하는 페이지
-
-  const mov = useNavigate();
-  const moveHandle = () => {
-    mov("/new");
-  };
-
+export default function App() {
   return (
     <>
-      <div>
-        <img src={getEmotion(1)} />
-        <img src={getEmotion(2)} />
-        <img src={getEmotion(3)} />
-        <img src={getEmotion(4)} />
-        <img src={getEmotion(5)} />
-      </div>
-      <div>
-        <Link to="/">Home</Link>
-        <Link to="/new">New</Link>
-        <Link to="/diary">Diary</Link>
-        <button onClick={moveHandle}>New 페이지로 이동하기 </button>
-        <h1>감정 일기장</h1>
-        <Router />
-      </div>
+      <Header
+        title="일기"
+        leftChild={<Button variant="DEFAULT">left</Button>}
+        rightChild={<Button variant="DEFAULT">right</Button>}
+      />
+
+      <Router />
     </>
   );
 }
-
-export default App;
