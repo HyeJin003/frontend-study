@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { UserLoginType } from "../../../../type/user";
 import { userLogin } from "../../../../api/user";
+import Link from "next/link";
 
 export default function LoginPage() {
   const [message, setMessage] = useState("");
@@ -93,6 +94,16 @@ export default function LoginPage() {
           </button>
           {error && <p className="text-xs text-red-400">{error}</p>}
         </form>
+        <p className="text-sm text-gray-400 text-center mt-4">
+          계정이 없으신가요?
+          <Link
+            href="/customer/signup"
+            className="text-black
+  font-medium"
+          >
+            회원가입
+          </Link>
+        </p>
       </div>
     </main>
   );
