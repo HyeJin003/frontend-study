@@ -15,3 +15,7 @@ export type UserLoginType = {
   email: string;
   password: string;
 };
+export interface UserProfileProps {
+  name: string;
+  image?: string;
+}

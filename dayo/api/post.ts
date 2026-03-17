@@ -1,11 +1,17 @@
+import { RegistPost } from "../type/posts";
+
 export async function postList() {
   try {
-    const result = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/`, {
-      headers: {
-        "Content-Type": "application/json",
-        "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+    const result = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/posts/?type=post`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+        },
+        cache: "no-store",
       },
-    });
+    );
     return { status: result.status, data: await result.json() };
   } catch (error) {
     console.error(error);
@@ -30,9 +36,170 @@ export async function postDetail(postId: string) {
     throw error;
   }
 }
-export const postResit = async () => {};
-export const updatePost = async () => {};
-export const deletePost = async () => {};
-export const addBookmark = async () => {};
-export const removeBookmark = async () => {};
-export const getBookmarks = async () => {};
+
+export async function postResit(post: RegistPost) {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const result = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        type: post.type,
+        title: post.title,
+        content: post.content,
+      }),
+    });
+    return { status: result.status, data: await result.json() };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function updatePost(
+  id: number,
+  data: { title: string; content: string },
+) {
+  try {
+    const token = localStorage.getItem("accessToken");
+
+    const result = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/posts/${id}`,
+      {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+      },
+    );
+    return { status: result.status, data: await result.json() };
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function uploadImage(files: File[]) {
+  try {
+    const urls: string[] = [];
+    const token = localStorage.getItem("accessToken");
+
+    for (const file of files) {
+      const formData = new FormData();
+      formData.append("attach", file);
+
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/files/`,
+        {
+          method: "POST",
+          headers: {
+            "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+            Authorization: `Bearer ${token}`,
+          },
+          body: formData,
+        },
+      );
+      const result = await response.json();
+
+      urls.push(result.item[0].path);
+    }
+    return urls;
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+//포스터 삭제
+export async function deletePost(id: number) {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/posts/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function addBookmark(target_id: number) {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/bookmarks/post`,
+      {
+        method: "POST",
+        headers: {
+          "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ target_id }),
+      },
+    );
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+
+export async function removeBookmark(target_id: number) {
+  try {
+    const token = localStorage.getItem("accessToken");
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/bookmarks/${target_id}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}
+export async function getBookmarks() {
+  try {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      return {
+        ok: 0,
+        item: [],
+      };
+    }
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/bookmarks/post`,
+      {
+        headers: {
+          "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
+    return response.json();
+  } catch (error) {
+    console.error(error);
+    throw error;
+  }
+}

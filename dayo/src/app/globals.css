@@ -1,2 +1,12 @@
 @import "tailwindcss";
 @variant dark (&:where(.dark, .dark *));
+.tiptap:focus {
+  outline: none;
+}
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #adb5bd;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}

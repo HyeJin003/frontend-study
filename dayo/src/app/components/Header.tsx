@@ -4,12 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function Header() {
-  const [isLogin, setIsLogin] = useState(() => {
-    if (typeof window === "undefined") {
-      return false;
-    }
-    return !!localStorage.getItem("accessToken");
-  });
+  const [isLogin, setIsLogin] = useState(false);
+  useEffect(() => {
+    setIsLogin(!!localStorage.getItem("accessToken"));
+  }, []);
 
   function handleLogout() {
     localStorage.removeItem("accessToken");
