@@ -1,9 +1,13 @@
 import { RegistPost } from "../type/posts";
 
-export async function postList() {
+export async function postList(
+  keyword: string = "",
+  page: number = 1,
+  type: string = "post",
+) {
   try {
     const result = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/posts/?type=post`,
+      `${process.env.NEXT_PUBLIC_API_URL}/posts/?type=${type}&keyword=${keyword}&page=${page}&limit=10`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -12,13 +16,17 @@ export async function postList() {
         cache: "no-store",
       },
     );
-    return { status: result.status, data: await result.json() };
+    const text = await result.text();
+    try {
+      return { status: result.status, data: JSON.parse(text) };
+    } catch {
+      return { status: result.status, data: { item: [] } };
+    }
   } catch (error) {
     console.error(error);
-    throw error;
+    return { status: 500, data: { item: [] } };
   }
 }
-
 export async function postDetail(postId: string) {
   try {
     const result = await fetch(
@@ -37,7 +45,7 @@ export async function postDetail(postId: string) {
   }
 }
 
-export async function postResit(post: RegistPost) {
+export async function postRegist(post: RegistPost) {
   try {
     const token = localStorage.getItem("accessToken");
     const result = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/`, {
@@ -202,4 +210,50 @@ export async function getBookmarks() {
     console.error(error);
     throw error;
   }
+}
+export async function addLike(postId: number) {
+  const token = localStorage.getItem("accessToken");
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/bookmarks/post`,
+    {
+      method: "POST",
+      headers: {
+        "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ target_id: postId, is_like: true }),
+    },
+  );
+  return response.json();
+}
+
+export async function removeLike(likeId: number) {
+  const token = localStorage.getItem("accessToken");
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/bookmarks/${likeId}`,
+    {
+      method: "DELETE",
+      headers: {
+        "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return response.json();
+}
+
+export async function getLikes() {
+  const token = localStorage.getItem("accessToken");
+  if (!token) return { ok: 0, item: [] };
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/bookmarks/post?is_like=true`,
+    {
+      headers: {
+        "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  );
+  return response.json();
 }

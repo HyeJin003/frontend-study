@@ -2,7 +2,7 @@
 //   - 댓글 작성                                                                                                                              - 댓글 삭제
 //   - 대댓글 작성
 
-export async function commentList(postId: string) {
+export async function commentList(postId: number) {
   try {
     const result = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/replies`,
@@ -21,8 +21,9 @@ export async function commentList(postId: string) {
   }
 }
 
-export async function commentWrite(postId: string, content: string) {
+export async function commentWrite(postId: number, content: string) {
   try {
+    const token = localStorage.getItem("accessToken");
     const result = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/replies`,
       {
@@ -30,6 +31,7 @@ export async function commentWrite(postId: string, content: string) {
         headers: {
           "Content-Type": "application/json",
           "Client-Id": process.env.NEXT_PUBLIC_CLIENT_ID!,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           content,
@@ -43,13 +45,13 @@ export async function commentWrite(postId: string, content: string) {
   }
 }
 export async function commentDelete(
-  postId: string,
-  data: { _id: string; reply_id: string },
+  postId: number,
+  data: { _id: number; reply_id: number },
 ) {
   try {
     const token = localStorage.getItem("accessToken");
     const result = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL} /posts/${postId}/replies/`,
+      `${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/replies/${data.reply_id}`,
       {
         method: "DELETE",
         headers: {
@@ -68,8 +70,8 @@ export async function commentDelete(
   }
 }
 export async function commentUpdate(
-  postId: string,
-  replyId: string,
+  postId: number,
+  replyId: number,
   content: string,
 ) {
   try {

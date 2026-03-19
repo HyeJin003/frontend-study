@@ -4,10 +4,15 @@ import { PostItem } from "../../../type/posts";
 import UserProfile from "../components/UserProfile";
 export const dynamic = "force-dynamic";
 
-export default async function PostListPage() {
-  const result = await postList();
-  console.log(result.data);
+export default async function PostListPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ keyword?: string }>;
+}) {
+  const { keyword = "" } = await searchParams;
+  const result = await postList(keyword);
   const posts = result.data.item ?? [];
+
   return (
     <div>
       <main className="flex flex-col gap-4 p-6 max-w-2xl mx-auto w-full">
@@ -15,7 +20,7 @@ export default async function PostListPage() {
           <h1 className="text-xl font-bold">게시글</h1>
           <Link
             href="/post/new"
-            className="bg-black text-white px-4 py-2 rounded text-sm"
+            className="border border-gray-300 text-gray-700 px-4 py-2 rounded-full text-sm"
           >
             글쓰기
           </Link>
@@ -31,7 +36,7 @@ export default async function PostListPage() {
             <div className="flex justify-between items-center">
               {/* <p className="text-sm text-gray-500">{post.user.name}</p> */}
               <time className="text-xs text-gray-400">{post.createdAt}</time>
-              <span className="text-xs text-gray-400">♥ {post.like ?? 0}</span>
+              <span className="text-xs text-gray-400">♥ {post.likes ?? 0}</span>
             </div>
           </Link>
         ))}

@@ -6,7 +6,7 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { postResit, uploadImage } from "../../../../api/post";
+import { postRegist, uploadImage } from "../../../../api/post";
 export default function PostNewPage() {
   const editor = useEditor({
     extensions: [
@@ -26,15 +26,12 @@ export default function PostNewPage() {
   const fileUpload = useRef<HTMLInputElement>(null);
 
   async function savePost() {
-    console.log("title:", title);
-    console.log("content:", editor?.getHTML());
-    const result = await postResit({
+    const result = await postRegist({
       type: "post",
       title,
       content: editor?.getHTML() ?? "",
       tag: "",
     });
-    console.log("result:", result);
     if (result.status === 201) {
       router.push("/post");
     }

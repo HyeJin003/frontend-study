@@ -4,7 +4,7 @@ export type PostItem = {
   title: string;
   content: string;
   createdAt: string;
-  like: number;
+  likes: number;
   user: {
     _id: number;
     name: string;
@@ -28,6 +28,13 @@ export type ListPost = {
   limit: number;
   sort: string;
 };
+export type BookmarkItem = {
+  _id: number;
+  post: {
+    _id: number;
+  };
+};
+
 export type ReplyItem = {
   _id: number;
   content: string;
@@ -39,3 +46,21 @@ export type ReplyItem = {
     image?: string;
   };
 };
+export type GuidePost = {
+  _id: number;
+  title: string;
+  createdAt: string;
+  user: {
+    _id: number;
+    name: string;
+    image?: string;
+  };
+  guide: {
+    desc: string;
+    country: string;
+    category: string;
+    image?: string;
+    subDesc: string;
+  };
+};
+export type Tab = "all" | "shopping" | "landmarks" | "favoritEat" | "attractions";
