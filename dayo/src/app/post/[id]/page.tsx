@@ -7,7 +7,7 @@ import {
   removeLike,
   getLikes,
   getBookmarks,
-} from "../../../../api/post";
+} from "../../api/post";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { PostItem, BookmarkItem } from "../../../../type/posts";

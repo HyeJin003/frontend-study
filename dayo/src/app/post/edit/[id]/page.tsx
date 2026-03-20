@@ -4,7 +4,7 @@ import StarterKit from "@tiptap/starter-kit";
 
 import { useRef, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { postDetail, updatePost, uploadImage } from "../../../../../api/post";
+import { postDetail, updatePost, uploadImage } from "../../../api/post";
 import { useEffect } from "react"; // useEffect 추가
 import TiptapImage from "@tiptap/extension-image";
 import TextAlign from "@tiptap/extension-text-align";

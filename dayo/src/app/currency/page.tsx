@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuthGuard } from "../hooks/useAuthGuard";
 
 // 통화 목록 데이터
 const CURRNCY_LIST = [
@@ -46,6 +47,7 @@ function getUserKey() {
   }
 }
 export default function CurrencyPage() {
+  useAuthGuard();
   // 상태값
   const [krw, setKrw] = useState("10000");
   // krw - 입력한 원화

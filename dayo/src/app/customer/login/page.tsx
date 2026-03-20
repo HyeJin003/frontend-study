@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { UserLoginType } from "../../../../type/user";
-import { userLogin } from "../../../../api/user";
+import { userLogin } from "../../api/user";
 import Link from "next/link";
 
 export default function LoginPage() {
@@ -24,7 +24,7 @@ export default function LoginPage() {
         localStorage.setItem("refreshToken", result.item.token.refreshToken);
         localStorage.setItem("userId", String(result.item._id));
         alert("로그인이 완료되었습니다!");
-        router.push("/");
+        router.push("/main");
       } else {
         setError(result.message || "로그인에 실패했습니다.");
       }

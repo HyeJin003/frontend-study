@@ -2,18 +2,23 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { GuidePost, PostItem } from "../../../type/posts";
-import { postList } from "../../../api/post";
+import { postList } from "../api/post";
+import { useAuthGuard } from "../hooks/useAuthGuard";
 
 const Tabs = [
   { key: "all", label: "전체" },
-  { key: "shopping", label: "쇼핑리스트" },
-  { key: "landmarks", label: "랜드마크" },
-  { key: "favoritEat", label: "맛집" },
-  { key: "attractions", label: "관광지" },
+  { key: "mustEat", label: "맛집" },
+  { key: "accommodation", label: "숙소" },
+  { key: "photoSpot", label: "포토스팟" },
+  { key: "shopping", label: "쇼핑" },
+  { key: "transport", label: "교통" },
+  { key: "tips", label: "꿀팁" },
 ];
 const COUNTRIES = ["전체", "일본", "캐나다", "미국", "유럽", "동남아", "기타"];
+const PRESET_COUNTRIES = ["일본", "캐나다", "미국", "유럽", "동남아"];
 
 export default function TravelGuidePage() {
+  useAuthGuard();
   const router = useRouter();
   const [tap, newTap] = useState("all");
   const [country, setCountry] = useState("전체");
@@ -21,7 +26,11 @@ export default function TravelGuidePage() {
 
   const filtered = posts.filter((post) => {
     const matchTab = tap === "all" || post.guide.category === tap;
-    const matchCountry = country === "전체" || post.guide.country === country;
+    const matchCountry =
+      country === "전체" ||
+      (country === "기타"
+        ? !PRESET_COUNTRIES.includes(post.guide.country)
+        : post.guide.country === country);
     return matchTab && matchCountry;
   });
 
@@ -94,7 +103,14 @@ export default function TravelGuidePage() {
             className="flex items-start gap-3 py-4 border-b border-gray-100"
           >
             <div className="flex-1">
-              <p className="font-semibold text-sm">{post.title}</p>
+              <div className="flex items-center gap-2">
+                <p className="font-semibold text-sm">{post.title}</p>
+                {country === "기타" && post.guide.country && (
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 shrink-0">
+                    {post.guide.country}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-gray-500 mt-0.5">{post.guide.desc}</p>
               <p className="text-xs text-gray-400 mt-1">{post.guide.subDesc}</p>
             </div>

@@ -1,4 +1,4 @@
-import { UserLoginType, UserSign } from "../type/user";
+import { UserLoginType, UserSign } from "../../../type/user";
 
 export async function signup(userSign: UserSign) {
   try {

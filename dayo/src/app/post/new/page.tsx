@@ -6,8 +6,10 @@ import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { postRegist, uploadImage } from "../../../../api/post";
+import { postRegist, uploadImage } from "../../api/post";
+import { useAuthGuard } from "../../hooks/useAuthGuard";
 export default function PostNewPage() {
+  useAuthGuard();
   const editor = useEditor({
     extensions: [
       StarterKit,

@@ -1,18 +1,47 @@
+"use client";
 import Link from "next/link";
-import { postList } from "../../../api/post";
+import { postList } from "../api/post";
 import { PostItem } from "../../../type/posts";
 import UserProfile from "../components/UserProfile";
-export const dynamic = "force-dynamic";
+import { useEffect, useRef, useState } from "react";
+import { useAuthGuard } from "../hooks/useAuthGuard";
 
-export default async function PostListPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ keyword?: string }>;
-}) {
-  const { keyword = "" } = await searchParams;
-  const result = await postList(keyword);
-  const posts = result.data.item ?? [];
+export default function PostListPage() {
+  useAuthGuard();
+  const [posts, setPosts] = useState<PostItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observerRef = useRef<HTMLDivElement>(null);
+  const loadingRef = useRef(false);
 
+  useEffect(() => {
+    loadingRef.current = true;
+    postList("", page).then((result) => {
+      if (result.status === 200) {
+        const items = result.data.item ?? [];
+        if (items.length === 0) {
+          setHasMore(false);
+        } else {
+          setPosts((prev) => {
+            const existingIds = new Set(prev.map((p) => p._id));
+            const newItems = items.filter((p: PostItem) => !existingIds.has(p._id));
+            return [...prev, ...newItems];
+          });
+        }
+      }
+      loadingRef.current = false;
+    });
+  }, [page]);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore && !loadingRef.current) {
+        setPage((prev) => prev + 1);
+      }
+    });
+    if (observerRef.current) observer.observe(observerRef.current);
+    return () => observer.disconnect();
+  }, [hasMore]);
   return (
     <div>
       <main className="flex flex-col gap-4 p-6 max-w-2xl mx-auto w-full">
@@ -41,6 +70,13 @@ export default async function PostListPage({
           </Link>
         ))}
       </main>
+      <div
+        ref={observerRef}
+        className="py-4 text-center text-xs         
+  text-gray-300"
+      >
+        {hasMore ? "로딩 중..." : "마지막이에요!"}
+      </div>
     </div>
   );
 }

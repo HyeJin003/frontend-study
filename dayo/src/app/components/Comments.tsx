@@ -6,7 +6,7 @@ import {
   commentWrite,
   commentDelete,
   commentUpdate,
-} from "../../../api/comment";
+} from "../api/comment";
 import { ReplyItem } from "../../../type/posts";
 import UserProfile from "./UserProfile";
 export default function Comments({ postId }: { postId: number }) {

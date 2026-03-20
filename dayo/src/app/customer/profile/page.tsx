@@ -6,9 +6,11 @@ import {
   updateProfile,
   uploadFile,
   deleteAccount,
-} from "../../../../api/user";
+} from "../../api/user";
+import { useAuthGuard } from "../../hooks/useAuthGuard";
 
 export default function ProfilePage() {
+  useAuthGuard();
   const [bio, setBio] = useState("");
   const [name, setName] = useState("");
   const [newPassword, setNewPassword] = useState("");

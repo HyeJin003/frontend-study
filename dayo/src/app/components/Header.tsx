@@ -30,7 +30,7 @@ export default function Header() {
       <div className="max-w-5xl mx-auto px-6 py-3 flex items-center gap-6">
         {/* 로고 */}
         <Link
-          href="/post"
+          href="/main"
           className="font-bold text-xl tracking-tight shrink-0"
         >
           Dayo
@@ -86,22 +86,13 @@ export default function Header() {
       </div>
 
       {/* 네비게이션 */}
-      <nav className="max-w-5xl mx-auto px-6 pb-2 flex gap-6 text-sm text-gray-500">
-        <Link href="/post" className="hover:text-black transition-colors">
-          게시글
-        </Link>
-        <Link
-          href="/travel-guide"
-          className="hover:text-black transition-colors"
-        >
-          여행가이드
-        </Link>
-        <Link href="/itinerary" className="hover:text-black transition-colors">
-          일정
-        </Link>
-        <Link href="/currency">환율</Link>
-        <Link href="/checklist">체크리스트</Link>{" "}
-        <Link href="/weather-prep">날씨준비</Link>
+      <nav className="max-w-5xl mx-auto px-6 pb-2 flex flex-nowrap gap-6 text-sm text-gray-500 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+        <Link href="/post" className="shrink-0 whitespace-nowrap hover:text-black transition-colors">게시글</Link>
+        <Link href="/travel-guide" className="shrink-0 whitespace-nowrap hover:text-black transition-colors">여행가이드</Link>
+        <Link href="/itinerary" className="shrink-0 whitespace-nowrap hover:text-black transition-colors">일정</Link>
+        <Link href="/currency" className="shrink-0 whitespace-nowrap hover:text-black transition-colors">환율</Link>
+        <Link href="/checklist" className="shrink-0 whitespace-nowrap hover:text-black transition-colors">체크리스트</Link>
+        <Link href="/weather-prep" className="shrink-0 whitespace-nowrap hover:text-black transition-colors">여행준비</Link>
       </nav>
     </header>
   );

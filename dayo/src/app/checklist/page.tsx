@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { postList, postRegist, updatePost } from "../../../api/post";
+import { postList, postRegist, updatePost } from "../api/post";
+import { useAuthGuard } from "../hooks/useAuthGuard";
 import { Item, Category, ChecklistPost } from "../../../type/checkList";
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -62,6 +63,7 @@ const DEFAULT_CATEGORIES: Category[] = [
 ];
 
 export default function ChecklistPage() {
+  useAuthGuard();
   const [loaded, setLoaded] = useState(false);
   // 어떤 카테고리가 펼쳐져 있는지
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
