@@ -19,40 +19,67 @@ interface AvatarMarkerProps {
   username?: string;
 }
 
-/** 48px DiceBear 미니 캐릭터 */
+// clothingColor 코드 → hex 매핑 (avataaars 기본 팔레트)
+const CLOTHES_COLOR_MAP: Record<string, string> = {
+  black: "#262e33", blue01: "#65c9ff", blue02: "#5199e4", blue03: "#25557c",
+  gray01: "#e6e6e6", gray02: "#929598", heather: "#3c4f5c", pastelBlue: "#b1e2ff",
+  pastelGreen: "#a7ffc4", pastelOrange: "#ffdeb5", pastelRed: "#ffafb9",
+  pastelYellow: "#ffffb1", pink: "#ff488e", red: "#ff5c5c", white: "#ffffff",
+  d6b370: "#d6b370",
+};
+
+/** 기존 avataaars 상체 + CSS 하체(다리+신발) 합성 전신 캐릭터 */
 function MiniDiceBear({ gender = "male", custom }: { gender: Gender; custom?: AvatarCustom }) {
   const svgString = useMemo(() => {
-    const seed = custom ? undefined : gender;
     const avatar = createAvatar(avataaars, {
-      seed: seed ?? gender,
-      size: 64,
-      ...(custom
-        ? {
-            mouth: [custom.mouth as never],
-            eyes: [custom.eyes as never],
-            eyebrows: [custom.eyebrows as never],
-            top: [custom.top as never],
-            hairColor: [custom.hairColor as never],
-            skinColor: [custom.skinColor as never],
-            clothing: [custom.clothing as never],
-            clothesColor: [custom.clothingColor as never],
-            accessories: [custom.accessories as never],
-            accessoriesProbability: custom.accessories === "blank" ? 0 : 100,
-            facialHair: [custom.facialHair as never],
-            facialHairProbability: custom.facialHair === "blank" || gender === "female" ? 0 : 100,
-          }
-        : {}),
+      seed: custom ? `${custom.top}-${custom.hairColor}-${gender}` : gender,
+      size: 120,
+      ...(custom ? {
+        mouth: [custom.mouth as never],
+        eyes: [custom.eyes as never],
+        eyebrows: [custom.eyebrows as never],
+        top: [custom.top as never],
+        hairColor: [custom.hairColor as never],
+        skinColor: [custom.skinColor as never],
+        clothing: [custom.clothing as never],
+        clothesColor: [custom.clothingColor as never],
+        accessories: [custom.accessories as never],
+        accessoriesProbability: custom.accessories === "blank" ? 0 : 100,
+        facialHair: [custom.facialHair as never],
+        facialHairProbability: custom.facialHair === "blank" || gender === "female" ? 0 : 100,
+      } : {}),
       backgroundColor: ["transparent" as never],
       backgroundType: ["solid" as never],
     });
     return avatar.toString();
   }, [gender, custom]);
 
+  // 의상 색으로 바지 색 결정
+  const pantsHex = custom?.clothingColor
+    ? (CLOTHES_COLOR_MAP[custom.clothingColor] ?? `#${custom.clothingColor}`)
+    : "#3b82f6";
+  // 피부색으로 신발 색 결정 (어두운 계열)
+  const shoeHex = "#1e1e2e";
+
   return (
-    <div
-      style={{ width: 52, height: 52 }}
-      dangerouslySetInnerHTML={{ __html: svgString }}
-    />
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 110 }}>
+      {/* 상체: avataaars SVG (아래 20% 자름 — 셔츠 끝까지만) */}
+      <div style={{ width: 110, height: 105, overflow: "hidden" }}
+        dangerouslySetInnerHTML={{ __html: svgString }}
+      />
+      {/* 허리 연결 패드 */}
+      <div style={{ width: 46, height: 6, background: pantsHex, marginTop: -4, borderRadius: "0 0 4px 4px" }} />
+      {/* 다리 */}
+      <div style={{ display: "flex", gap: 8, marginTop: 1 }}>
+        <div style={{ width: 19, height: 38, background: pantsHex, borderRadius: "2px 2px 0 0" }} />
+        <div style={{ width: 19, height: 38, background: pantsHex, borderRadius: "2px 2px 0 0" }} />
+      </div>
+      {/* 신발 */}
+      <div style={{ display: "flex", gap: 4, marginTop: 1 }}>
+        <div style={{ width: 26, height: 10, background: shoeHex, borderRadius: "3px 8px 8px 3px", marginLeft: -4 }} />
+        <div style={{ width: 26, height: 10, background: shoeHex, borderRadius: "8px 3px 3px 8px", marginRight: -4 }} />
+      </div>
+    </div>
   );
 }
 
@@ -128,8 +155,8 @@ function AvatarMarkerInner({ position, tier, gender = "male", custom, username =
 
         {/* 발 그림자 */}
         <motion.div
-          className="rounded-full mt-0.5"
-          style={{ width: 28, height: 5, background: "rgba(0,0,0,0.25)", filter: "blur(2px)" }}
+          className="rounded-full"
+          style={{ width: 70, height: 10, background: "rgba(0,0,0,0.3)", filter: "blur(5px)", marginTop: 2 }}
           animate={{ scaleX: [1, 0.8, 1], opacity: [0.5, 0.25, 0.5] }}
           transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
         />

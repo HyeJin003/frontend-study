@@ -48,4 +48,15 @@ export const gameService = {
     });
     return res.data.item;
   },
+
+  async joinGame(gameId: number): Promise<void> {
+    await apiInstance.post(`/posts/${gameId}/replies`, {
+      content: "참가합니다! 🙋",
+    });
+  },
+
+  async getGame(id: number): Promise<Post> {
+    const res = await apiInstance.get<PostResponse>(`/posts/${id}`);
+    return res.data.item;
+  },
 };

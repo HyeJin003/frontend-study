@@ -94,4 +94,9 @@ export const shopService = {
     });
     return res.data.item;
   },
+
+  /** PATCH /users/:id — 포인트 충전 */
+  async chargePoints(userId: number, amount: number): Promise<void> {
+    await apiInstance.patch(`/users/${userId}`, { point: amount });
+  },
 };

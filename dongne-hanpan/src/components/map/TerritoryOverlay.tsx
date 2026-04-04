@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
-import { CustomOverlayMap } from "react-kakao-maps-sdk";
+import { useMemo, useEffect, useRef } from "react";
+import { useMap } from "react-kakao-maps-sdk";
 import {
   latLngToCell,
   getSurroundingCells,
@@ -23,6 +23,9 @@ export default function TerritoryOverlay({
   myNeighborhood,
   allNeighborhoods,
 }: TerritoryOverlayProps) {
+  const map = useMap();
+  const polygonsRef = useRef<kakao.maps.Rectangle[]>([]);
+
   const cells = useMemo(() => {
     const center = latLngToCell(position.lat, position.lng);
     return getSurroundingCells(center, 2).map((cell) => {
@@ -33,62 +36,35 @@ export default function TerritoryOverlay({
     });
   }, [position.lat, position.lng, myNeighborhood, allNeighborhoods]);
 
-  return (
-    <>
-      {cells.map(({ bounds, owner, isMe, key }) => (
-        <TerritoryRect
-          key={key}
-          bounds={bounds}
-          fillColor={neighborhoodColor(owner, isMe ? 0.22 : 0.1)}
-          strokeOpacity={isMe ? 0.18 : 0.08}
-          strokeWeight={1}
-        />
-      ))}
-    </>
-  );
-}
+  useEffect(() => {
+    if (!map) return;
 
-/** kakao.maps.Rectangle을 직접 사용하는 wrapper */
-function TerritoryRect({
-  bounds,
-  fillColor,
-  strokeOpacity,
-  strokeWeight,
-}: {
-  bounds: { sw: { lat: number; lng: number }; ne: { lat: number; lng: number } };
-  fillColor: string;
-  strokeColor?: string;
-  strokeOpacity: number;
-  strokeWeight: number;
-}) {
-  // CustomOverlayMap으로 셀 중앙에 투명 오버레이를 띄우는 대신
-  // useEffect + kakao.maps.Rectangle을 직접 그림
-  // → Map children으로 렌더링되므로 kakao 전역이 이미 로드된 상태
-  const center = {
-    lat: (bounds.sw.lat + bounds.ne.lat) / 2,
-    lng: (bounds.sw.lng + bounds.ne.lng) / 2,
-  };
-  const width = Math.abs(bounds.ne.lng - bounds.sw.lng);
-  const height = Math.abs(bounds.ne.lat - bounds.sw.lat);
+    // 기존 폴리곤 제거
+    polygonsRef.current.forEach((r) => r.setMap(null));
+    polygonsRef.current = [];
 
-  // 픽셀 크기를 추정: 0.005° ≈ 500m, 지도 level 3 기준 약 100px
-  // CustomOverlayMap div로 사각형을 흉내 냄
-  const pxW = Math.round((width / 0.005) * 110);
-  const pxH = Math.round((height / 0.005) * 110);
+    cells.forEach(({ bounds, owner, isMe }) => {
+      const sw = new kakao.maps.LatLng(bounds.sw.lat, bounds.sw.lng);
+      const ne = new kakao.maps.LatLng(bounds.ne.lat, bounds.ne.lng);
+      const rect = new kakao.maps.Rectangle({
+        bounds: new kakao.maps.LatLngBounds(sw, ne),
+        strokeWeight: isMe ? 2 : 1,
+        strokeColor: isMe ? neighborhoodColor(owner, 1) : "rgba(255,255,255,0.3)",
+        strokeOpacity: isMe ? 0.7 : 0.15,
+        strokeStyle: "solid",
+        fillColor: neighborhoodColor(owner, isMe ? 0.25 : 0.08),
+        fillOpacity: 1,
+        zIndex: isMe ? 2 : 1,
+      });
+      rect.setMap(map);
+      polygonsRef.current.push(rect);
+    });
 
-  return (
-    <CustomOverlayMap position={center} zIndex={1} clickable={false}>
-      <div
-        style={{
-          width: pxW,
-          height: pxH,
-          backgroundColor: fillColor,
-          border: `${strokeWeight}px solid rgba(255,255,255,${strokeOpacity})`,
-          transform: "translate(-50%, -50%)",
-          pointerEvents: "none",
-          userSelect: "none",
-        }}
-      />
-    </CustomOverlayMap>
-  );
+    return () => {
+      polygonsRef.current.forEach((r) => r.setMap(null));
+      polygonsRef.current = [];
+    };
+  }, [map, cells]);
+
+  return null;
 }

@@ -10,7 +10,7 @@ import { useFashionTier } from "@/hooks/useFashionTier";
 import { TIER_VISUAL } from "@/components/map/tierConfig";
 import { gameService } from "@/services/gameService";
 import { battleService } from "@/services/battleService";
-import { useAuthStore, selectUser, selectIsLoggedIn, selectNeighborhood, selectIsAdmin } from "@/store/useAuthStore";
+import { useAuthStore, selectUser, selectIsLoggedIn, selectNeighborhood, selectCity, selectIsAdmin } from "@/store/useAuthStore";
 import { useAvatarStore, selectCustom } from "@/store/useAvatarStore";
 import DiceBearAvatar from "@/components/avatar/DiceBearAvatar";
 import NeighborhoodSheet from "@/components/neighborhood/NeighborhoodSheet";
@@ -32,6 +32,7 @@ export default function HomePage() {
   const isLoggedIn = useAuthStore(selectIsLoggedIn);
   const user = useAuthStore(selectUser);
   const myNeighborhood = useAuthStore(selectNeighborhood) ?? "내 동네";
+  const myCity = useAuthStore(selectCity);
   const isAdmin = useAuthStore(selectIsAdmin);
   const gender = useAvatarStore((s) => s.gender);
   const custom = useAvatarStore(selectCustom);
@@ -43,15 +44,16 @@ export default function HomePage() {
   }, [isLoggedIn, router]);
 
   const { position, status, refresh, accuracy } = useMap();
-  const { tier, postCount, isLoading: isTierLoading } = useFashionTier(user?._id ?? null);
+  const { tier } = useFashionTier(user?._id ?? null);
 
   const [selectedGame, setSelectedGame] = useState<Post | null>(null);
   const [showCreate, setShowCreate] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showNeighborhood, setShowNeighborhood] = useState(false);
+  const [neighborhoodCenter, setNeighborhoodCenter] = useState<{ lat: number; lng: number } | null>(null);
 
   const isLocating = status === "idle" || status === "loading";
-  const mapCenter = position ?? { lat: 37.5665, lng: 126.978 };
+  const mapCenter = neighborhoodCenter ?? position ?? { lat: 37.5665, lng: 126.978 };
   const tierVisual = TIER_VISUAL[tier];
 
   // ── 주변 게임 목록
@@ -99,19 +101,7 @@ export default function HomePage() {
 
   // ── 게임 참가
   const { mutate: joinGame, isPending: isJoining } = useMutation({
-    mutationFn: async (game: Post) => {
-      const extra = game.extra as Record<string, unknown>;
-      return gameService.createGame({
-        title: `${game.title} 참가`,
-        content: "",
-        sport: (extra.sport as string) ?? "기타",
-        location: (extra.location as string) ?? "",
-        date: (extra.date as string) ?? "",
-        maxPlayers: (extra.maxPlayers as number) ?? 0,
-        lat: (extra.lat as number) ?? 0,
-        lng: (extra.lng as number) ?? 0,
-      });
-    },
+    mutationFn: (game: Post) => gameService.joinGame(game._id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: GAMES_KEY });
       setSelectedGame(null);
@@ -140,19 +130,16 @@ export default function HomePage() {
 
       {/* ── 상단 헤더 ─────────────────────────────────────────── */}
       <motion.header
-        className="absolute top-0 left-0 right-0 z-20 px-4 pt-safe"
+        className="absolute top-0 left-0 right-0 z-20 pt-safe"
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: "easeOut", delay: 0.2 }}
       >
-        <div className="flex items-center justify-between py-3">
+        <div className="max-w-[430px] mx-auto px-4 flex items-center justify-between py-3">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-brand flex items-center justify-center shadow-lg shadow-brand/40">
+            <div className="w-9 h-9 rounded-xl bg-brand flex items-center justify-center shadow-lg shadow-brand/40">
               <span className="text-white font-black text-sm">동</span>
             </div>
-            <span className="text-white font-black text-lg tracking-tight drop-shadow">
-              동네한판
-            </span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -161,63 +148,46 @@ export default function HomePage() {
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 onClick={() => setShowGameList(true)}
-                className="flex items-center gap-1.5 bg-brand/20 border border-brand/40 px-2.5 py-1.5 rounded-full active:scale-95 transition-transform"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full active:scale-95 transition-transform"
+                style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)" }}
               >
                 <span className="text-brand text-xs">⚡</span>
                 <span className="text-white text-xs font-bold">{games.length}개 게임</span>
               </motion.button>
             )}
 
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-sm text-xs font-semibold shadow ${
-              status === "success"
-                ? "bg-green-500/20 text-green-300 border border-green-500/30"
-                : status === "error"
-                  ? "bg-red-500/20 text-red-300 border border-red-500/30"
-                  : "bg-white/10 text-white/60 border border-white/10"
-            }`}>
+            <div
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+              style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)" }}
+            >
               <span className={`w-1.5 h-1.5 rounded-full ${
                 status === "success" ? "bg-green-400 animate-pulse"
                   : status === "error" ? "bg-red-400"
                   : "bg-white/40 animate-pulse"
               }`} />
-              {status === "success" ? (accuracy ? `±${Math.round(accuracy)}m` : "위치 확인")
-                : status === "error" ? "위치 오류"
-                : "위치 탐색 중"}
+              <span className={
+                status === "success" ? "text-green-300"
+                  : status === "error" ? "text-red-300"
+                  : "text-white/60"
+              }>
+                {status === "success" ? (accuracy ? `±${Math.round(accuracy)}m` : "위치 확인")
+                  : status === "error" ? "위치 오류"
+                  : "위치 탐색 중"}
+              </span>
             </div>
           </div>
         </div>
       </motion.header>
 
-      {/* ── 티어 토스트 ───────────────────────────────────────── */}
-      <AnimatePresence mode="wait">
-        {!isTierLoading && (
-          <motion.div
-            key={tier}
-            className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-none"
-            initial={{ opacity: 0, scale: 0.7, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.8, y: -6 }}
-            transition={{ type: "spring", stiffness: 300, damping: 22 }}
-          >
-            <div
-              className="flex items-center gap-2 px-4 py-2 rounded-2xl shadow-xl text-sm font-bold whitespace-nowrap"
-              style={{ background: tierVisual.badgeBg, color: tierVisual.badgeText, border: `1.5px solid ${tierVisual.borderColor}55` }}
-            >
-              <span className="text-lg">{tierVisual.emoji}</span>
-              <span>{tierVisual.label}</span>
-              <span className="opacity-50 font-normal text-xs">게시글 {postCount}개</span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* ── 위치 권한 거부 안내 ───────────────────────────────── */}
       {status === "error" && (
         <motion.div
-          className="absolute top-20 left-4 right-4 z-20"
+          className="absolute top-20 left-0 right-0 z-20 flex justify-center px-4"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
         >
+        <div className="w-full max-w-[430px]">
           <div className="bg-neutral-900/95 backdrop-blur-sm border border-white/10 rounded-2xl px-4 py-4 flex gap-3 items-start shadow-xl">
             <span className="text-2xl shrink-0">📍</span>
             <div className="flex-1">
@@ -229,6 +199,7 @@ export default function HomePage() {
             </div>
             <button onClick={refresh} className="text-brand text-xs font-bold shrink-0 mt-0.5">재시도</button>
           </div>
+        </div>
         </motion.div>
       )}
 
@@ -240,132 +211,128 @@ export default function HomePage() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.45, ease: "easeOut", delay: 0.35 }}
       >
-        {/* 동네·점수 스코어보드 */}
-        <div className="flex items-center justify-center mb-2 px-4">
+      <div className="max-w-[430px] mx-auto px-4">
+        {/* 동네·점수 — 중앙 작은 pill만 */}
+        <div className="flex items-center justify-center mb-3">
           <button
             onClick={() => setShowNeighborhood(true)}
-            className="flex items-center gap-3 bg-neutral-900/90 backdrop-blur-md border border-white/10 rounded-2xl px-5 py-2 shadow-xl active:scale-95 transition-transform"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full active:scale-95 transition-transform"
+            style={{ background: "rgba(0,0,0,0.45)", backdropFilter: "blur(8px)" }}
           >
-            {/* 동네 이름 — 탭하면 변경 */}
-            <div className="flex items-center gap-1.5">
-              <span className="text-base">🏘️</span>
-              <span className="text-white font-bold text-sm">{myNeighborhood}</span>
-              <span className="text-white/30 text-xs">▾</span>
+            <span className="text-sm">🏘️</span>
+            <div className="flex flex-col items-start">
+              {myCity && (
+                <span className="text-white/50 text-[9px] leading-none">{myCity}</span>
+              )}
+              <span className="text-white font-bold text-xs">{myNeighborhood}</span>
             </div>
-            {/* 구분선 */}
-            <div className="w-px h-4 bg-white/15" />
-            {/* 점수 */}
-            <div className="flex items-center gap-1">
-              <span className="text-brand text-xs font-black">{myScore > 0 ? `${myScore}점` : "0점"}</span>
-            </div>
-            {isAdmin && (
-              <>
-                <div className="w-px h-4 bg-white/15" />
-                <span className="text-yellow-400 text-xs font-black">👑 ADMIN</span>
-              </>
-            )}
+            <span className="text-white/40 text-[10px]">▾</span>
+            <span className="text-brand text-xs font-black">{myScore > 0 ? `${myScore}점` : "0점"}</span>
+            {isAdmin && <span className="text-yellow-400 text-xs font-black">👑</span>}
           </button>
         </div>
 
-        {/* 메인 탭바 — 유리판 스타일 */}
-        <div className="mx-3">
-          <div
-            className="flex items-center bg-neutral-900/95 backdrop-blur-xl border border-white/10 rounded-3xl px-2 py-2 shadow-2xl"
-            style={{ boxShadow: "0 -4px 40px rgba(0,0,0,0.5), 0 2px 20px rgba(0,0,0,0.4)" }}
+        {/* 플로팅 버튼 3개 — 바 없이 각자 떠있음 */}
+        <div className="flex items-end justify-between px-2 pb-1">
+          {/* 캐릭터 */}
+          <motion.button
+            onClick={() => router.push("/avatar")}
+            className="flex flex-col items-center gap-1"
+            whileTap={{ scale: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
           >
-            {/* 캐릭터 탭 — DiceBear 얼굴 원형 (포켓몬GO 스타일) */}
-            <motion.button
-              onClick={() => router.push("/avatar")}
-              className="flex-1 flex flex-col items-center gap-1 py-1 rounded-2xl active:bg-white/5 transition-colors"
-              whileTap={{ scale: 0.92 }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.42 }}
-            >
-              <motion.div
-                className="relative overflow-hidden rounded-full"
-                style={{
-                  width: 48, height: 48,
-                  border: `2.5px solid ${tierVisual.borderColor}`,
-                  boxShadow: `0 0 0 2px rgba(0,0,0,0.5), 0 2px 12px ${tierVisual.borderColor}55`,
-                  background: tierVisual.avatarGradient,
-                }}
-                animate={
-                  tier === "FASHIONISTA"
-                    ? { boxShadow: [`0 0 0 2px rgba(0,0,0,0.5), 0 0 8px ${tierVisual.borderColor}`, `0 0 0 2px rgba(0,0,0,0.5), 0 0 20px ${tierVisual.borderColor}`, `0 0 0 2px rgba(0,0,0,0.5), 0 0 8px ${tierVisual.borderColor}`] }
-                    : tier === "TERRORIST" ? { rotate: [-3, 3, -3] } : {}
-                }
-                transition={
-                  tier === "FASHIONISTA" ? { duration: 2, repeat: Infinity }
-                    : tier === "TERRORIST" ? { duration: 0.9, repeat: Infinity } : {}
-                }
-              >
-                <DiceBearAvatar custom={custom} gender={gender} size={48} />
-              </motion.div>
-              <span className="text-white/40 text-[9px] font-semibold">{user?.name ?? "나"}</span>
-            </motion.button>
-
-            {/* 중앙 FAB — 운동경기 시작 버튼 */}
             <motion.div
-              className="flex flex-col items-center gap-1 -mt-6"
-              initial={{ y: 16, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 280, damping: 22 }}
+              className="relative overflow-hidden rounded-full"
+              style={{
+                width: 52, height: 52,
+                border: `2.5px solid ${tierVisual.borderColor}`,
+                boxShadow: `0 4px 16px rgba(0,0,0,0.5), 0 0 12px ${tierVisual.borderColor}55`,
+                background: tierVisual.avatarGradient,
+              }}
+              animate={
+                tier === "FASHIONISTA"
+                  ? { boxShadow: [`0 4px 16px rgba(0,0,0,0.5), 0 0 8px ${tierVisual.borderColor}`, `0 4px 16px rgba(0,0,0,0.5), 0 0 24px ${tierVisual.borderColor}`, `0 4px 16px rgba(0,0,0,0.5), 0 0 8px ${tierVisual.borderColor}`] }
+                  : tier === "TERRORIST" ? { rotate: [-3, 3, -3] } : {}
+              }
+              transition={
+                tier === "FASHIONISTA" ? { duration: 2, repeat: Infinity }
+                  : tier === "TERRORIST" ? { duration: 0.9, repeat: Infinity } : {}
+              }
             >
-              <HapticButton
-                haptic="medium"
-                onClick={() => setShowCreate(true)}
-                className="relative w-[68px] h-[68px] rounded-full flex items-center justify-center overflow-hidden"
-                style={{
-                  background: "linear-gradient(145deg, #FF9B26, #FF8200, #E06000)",
-                  boxShadow: "0 0 0 3px rgba(255,130,0,0.3), 0 6px 28px rgba(255,130,0,0.5), 0 2px 8px rgba(0,0,0,0.4)",
-                }}
-              >
-                {/* 배경 패턴 — 운동장 라인 느낌 */}
-                <div className="absolute inset-0 opacity-15">
-                  <div className="absolute top-1/2 left-0 right-0 h-px bg-white" />
-                  <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white" />
-                  <div className="absolute inset-3 rounded-full border border-white" />
-                </div>
-                <motion.span
-                  className="relative text-2xl z-10"
-                  animate={{ scale: [1, 1.12, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  🏃
-                </motion.span>
-              </HapticButton>
-              <span className="text-white/50 text-[9px] font-bold mt-0.5">경기 열기</span>
+              <DiceBearAvatar custom={custom} gender={gender} size={52} />
             </motion.div>
+            <span className="text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}>{user?.name ?? "나"}</span>
+          </motion.button>
 
-            {/* 배틀 / 관리자 탭 */}
-            <motion.button
-              onClick={() => router.push(isAdmin ? "/admin" : "/battle")}
-              className="flex-1 flex flex-col items-center gap-1 py-1 rounded-2xl active:bg-white/5 transition-colors"
-              whileTap={{ scale: 0.92 }}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.42 }}
+          {/* 중앙 FAB */}
+          <motion.div
+            className="flex flex-col items-center gap-1 -mb-2"
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.5, type: "spring", stiffness: 280, damping: 22 }}
+          >
+            <HapticButton
+              haptic="medium"
+              onClick={() => setShowCreate(true)}
+              className="relative w-[72px] h-[72px] rounded-full flex items-center justify-center overflow-hidden"
+              style={{
+                background: "linear-gradient(145deg, #FF9B26, #FF8200, #E06000)",
+                boxShadow: "0 0 0 3px rgba(255,130,0,0.4), 0 8px 32px rgba(255,130,0,0.6)",
+              }}
             >
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center"
-                style={isAdmin
-                  ? { background: "linear-gradient(135deg, #F59E0B22, #D9770622)", border: "2px solid #F59E0B60" }
-                  : { background: "rgba(255,255,255,0.06)", border: "2px solid rgba(255,255,255,0.1)" }
-                }
-              >
-                <span className="text-xl">{isAdmin ? "👑" : "⚔️"}</span>
+              <div className="absolute inset-0 opacity-15">
+                <div className="absolute top-1/2 left-0 right-0 h-px bg-white" />
+                <div className="absolute top-0 bottom-0 left-1/2 w-px bg-white" />
+                <div className="absolute inset-3 rounded-full border border-white" />
               </div>
-              <span className="text-white/40 text-[9px] font-semibold">{isAdmin ? "관리자" : "배틀"}</span>
-            </motion.button>
-          </div>
+              <motion.span
+                className="relative text-2xl z-10"
+                animate={{ scale: [1, 1.12, 1] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                🏃
+              </motion.span>
+            </HapticButton>
+            <span className="text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}>경기 열기</span>
+          </motion.div>
+
+          {/* 배틀 */}
+          <motion.button
+            onClick={() => router.push(isAdmin ? "/admin" : "/battle")}
+            className="flex flex-col items-center gap-1"
+            whileTap={{ scale: 0.9 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <div
+              className="w-[52px] h-[52px] rounded-full flex items-center justify-center text-2xl"
+              style={{
+                background: isAdmin
+                  ? "linear-gradient(135deg, rgba(245,158,11,0.3), rgba(217,119,6,0.3))"
+                  : "rgba(0,0,0,0.45)",
+                backdropFilter: "blur(8px)",
+                boxShadow: "0 4px 16px rgba(0,0,0,0.5)",
+                border: isAdmin ? "2px solid rgba(245,158,11,0.6)" : "2px solid rgba(255,255,255,0.15)",
+              }}
+            >
+              {isAdmin ? "👑" : "⚔️"}
+            </div>
+            <span className="text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(4px)" }}>{isAdmin ? "관리자" : "배틀"}</span>
+          </motion.button>
         </div>
+      </div>
       </motion.div>
 
       {/* ── 동네 선택 시트 ───────────────────────────────────────── */}
       <NeighborhoodSheet
         open={showNeighborhood}
         onClose={() => setShowNeighborhood(false)}
+        onNeighborhoodSelect={(name, pos) => {
+          setNeighborhoodCenter(pos);
+        }}
       />
 
       {/* ── 게임 상세 바텀시트 ─────────────────────────────────── */}
@@ -449,7 +416,7 @@ function NearbyGamesPanel({
                 const sport = (extra?.sport as string) ?? "기타";
                 const location = (extra?.location as string) ?? "";
                 const maxP = (extra?.maxPlayers as number) ?? 0;
-                const curP = (extra?.currentPlayers as number) ?? 0;
+                const curP = 1 + (game.replies?.length ?? 0);
                 const isFull = maxP > 0 && curP >= maxP;
                 const color = SPORT_COLOR[sport] ?? "#FF8200";
                 return (

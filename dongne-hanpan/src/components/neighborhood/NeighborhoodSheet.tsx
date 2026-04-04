@@ -8,6 +8,7 @@ import HapticButton from "@/components/ui/HapticButton";
 interface NeighborhoodSheetProps {
   open: boolean;
   onClose: () => void;
+  onNeighborhoodSelect?: (name: string, position: { lat: number; lng: number }) => void;
 }
 
 interface KakaoPlace {
@@ -25,8 +26,9 @@ const POPULAR = [
   "건대입구", "잠실동", "송파동", "강동동", "목동",
 ];
 
-export default function NeighborhoodSheet({ open, onClose }: NeighborhoodSheetProps) {
+export default function NeighborhoodSheet({ open, onClose, onNeighborhoodSelect }: NeighborhoodSheetProps) {
   const setNeighborhood = useAuthStore((s) => s.setNeighborhood);
+  const [cityName, setCityName] = useState<string | null>(null);
   const current = useAuthStore((s) => s.neighborhood);
 
   const [query, setQuery] = useState("");
@@ -83,36 +85,72 @@ export default function NeighborhoodSheet({ open, onClose }: NeighborhoodSheetPr
   const detectGps = () => {
     if (!navigator.geolocation) return;
     setGpsLoading(true);
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const { latitude: lat, longitude: lng } = pos.coords;
-        if (!window.kakao?.maps?.services) { setGpsLoading(false); return; }
+
+        // Kakao SDK 로드 안 됐으면 좌표만으로 처리
+        if (!window.kakao?.maps?.services) {
+          setGpsLoading(false);
+          pick("현재 위치", { lat, lng });
+          return;
+        }
+
         const geocoder = new window.kakao.maps.services.Geocoder();
         geocoder.coord2RegionCode(
           lng, lat,
-          (result: Array<{ region_type: string; region_3depth_name: string }>, status: string) => {
+          (result: Array<{ region_type: string; region_2depth_name: string; region_3depth_name: string }>, status: string) => {
             setGpsLoading(false);
-            if (status === "OK") {
-              const dong = result.find((r) => r.region_type === "H");
-              if (dong?.region_3depth_name) {
-                pick(dong.region_3depth_name);
-              }
+            if (status !== "OK" || !result.length) {
+              pick("현재 위치", { lat, lng });
+              return;
             }
+            // 행정동(H) 우선, 없으면 법정동(B) 사용
+            const region =
+              result.find((r) => r.region_type === "H" && r.region_3depth_name) ??
+              result.find((r) => r.region_type === "B" && r.region_3depth_name) ??
+              result[0];
+
+            const dongName = region.region_3depth_name || "현재 위치";
+            const cityVal  = region.region_2depth_name || undefined;
+            setCityName(cityVal ?? null);
+            pick(dongName, { lat, lng }, cityVal);
           },
         );
       },
       () => setGpsLoading(false),
-      { timeout: 8000 },
+      { timeout: 10000, enableHighAccuracy: false },
     );
   };
 
   // ── 선택 확정 ───────────────────────────────────────────────────
-  const pick = (name: string) => {
+  const pick = (name: string, presetPos?: { lat: number; lng: number }, presetCity?: string) => {
     setSelected(name);
-    setTimeout(() => {
-      setNeighborhood(name);
-      onClose();
-    }, 600);
+
+    const commit = (pos?: { lat: number; lng: number }, city?: string) => {
+      setTimeout(() => {
+        setNeighborhood(name, city ?? cityName ?? undefined);
+        if (pos && onNeighborhoodSelect) onNeighborhoodSelect(name, pos);
+        onClose();
+      }, 400);
+    };
+
+    if (presetPos) { commit(presetPos, presetCity); return; }
+
+    // 동네 이름으로 geocoding
+    if (window.kakao?.maps?.services) {
+      const ps = new window.kakao.maps.services.Places();
+      ps.keywordSearch(name, (data: KakaoPlace[], status: string) => {
+        if (status === "OK" && data.length > 0) {
+          commit({ lat: parseFloat(data[0].y), lng: parseFloat(data[0].x) });
+        } else {
+          commit();
+        }
+      });
+    } else {
+      commit();
+    }
   };
 
   return (
@@ -211,7 +249,7 @@ export default function NeighborhoodSheet({ open, onClose }: NeighborhoodSheetPr
                         return (
                           <motion.button
                             key={i}
-                            onClick={() => pick(dong)}
+                            onClick={() => pick(dong, { lat: parseFloat(place.y), lng: parseFloat(place.x) })}
                             className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-left transition-all active:scale-98"
                             style={{
                               backgroundColor: isSelected ? "rgba(255,130,0,0.15)" : "rgba(255,255,255,0.05)",

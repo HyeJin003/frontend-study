@@ -5,14 +5,15 @@ import type { User } from "@/types";
 interface AuthState {
   user: (User & { point?: number }) | null;
   accessToken: string | null;
-  neighborhood: string | null; // 동네 (예: "역삼동")
+  neighborhood: string | null; // 동 (예: "역삼동")
+  city: string | null;         // 시/구 (예: "강남구", "시흥시")
   isLoggedIn: boolean;
 }
 
 interface AuthActions {
   login: (user: User & { point?: number }, token: string, neighborhood?: string) => void;
   logout: () => void;
-  setNeighborhood: (name: string) => void;
+  setNeighborhood: (name: string, city?: string) => void;
   updatePoint: (point: number) => void;
 }
 
@@ -22,10 +23,10 @@ export const useAuthStore = create<AuthState & AuthActions>()(
       user: null,
       accessToken: null,
       neighborhood: null,
+      city: null,
       isLoggedIn: false,
 
       login: (user, token, neighborhood) => {
-        // apiInstance interceptor가 localStorage에서 읽으므로 여기도 저장
         if (typeof window !== "undefined") {
           localStorage.setItem("accessToken", token);
         }
@@ -36,10 +37,11 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         if (typeof window !== "undefined") {
           localStorage.removeItem("accessToken");
         }
-        set({ user: null, accessToken: null, isLoggedIn: false, neighborhood: null });
+        set({ user: null, accessToken: null, isLoggedIn: false, neighborhood: null, city: null });
       },
 
-      setNeighborhood: (name) => set({ neighborhood: name }),
+      setNeighborhood: (name, city) =>
+        set({ neighborhood: name, ...(city !== undefined ? { city } : {}) }),
 
       updatePoint: (point) =>
         set((s) => ({
@@ -52,6 +54,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
         user: s.user,
         accessToken: s.accessToken,
         neighborhood: s.neighborhood,
+        city: s.city,
         isLoggedIn: s.isLoggedIn,
       }),
     },
@@ -61,7 +64,7 @@ export const useAuthStore = create<AuthState & AuthActions>()(
 export const selectUser         = (s: AuthState & AuthActions) => s.user;
 export const selectIsLoggedIn   = (s: AuthState & AuthActions) => s.isLoggedIn;
 export const selectNeighborhood = (s: AuthState & AuthActions) => s.neighborhood;
-// 본인 이메일 추가하면 관리자 권한 부여
+export const selectCity         = (s: AuthState & AuthActions) => s.city;
 const ADMIN_EMAILS: string[] = ["abc123@naver.com"];
 export const selectIsAdmin = (s: AuthState & AuthActions) =>
   s.user?.type === "admin" || ADMIN_EMAILS.includes(s.user?.email ?? "");

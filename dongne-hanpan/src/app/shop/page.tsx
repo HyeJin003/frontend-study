@@ -39,6 +39,13 @@ export default function ShopPage() {
     enabled: !!user?._id,
   });
 
+  // ── 포인트 충전 ─────────────────────────────────────────────────
+  const { mutate: charge, isPending: isCharging } = useMutation({
+    mutationFn: () => shopService.chargePoints(user!._id, 10000),
+    onSuccess: () => qc.invalidateQueries({ queryKey: BALANCE_KEY }),
+    onError: () => setErrorMsg("포인트 충전에 실패했습니다."),
+  });
+
   // ── 구매 뮤테이션 (Optimistic Update) ───────────────────────────
   const { mutate: buy, isPending } = useMutation({
     mutationFn: (product: Product) => shopService.buyProduct(product._id),
@@ -112,19 +119,27 @@ export default function ShopPage() {
       >
         <h1 className="font-black text-xl">👗 옷가게</h1>
 
-        {/* 포인트 — 낙관적으로 즉시 줄어드는 숫자 */}
-        <motion.div
-          key={balance}
-          className="flex items-center gap-1.5 bg-brand/15 border border-brand/30 px-3 py-1.5 rounded-full"
-          initial={{ scale: 1.15, color: "#FF8200" }}
-          animate={{ scale: 1, color: "#ffffff" }}
-          transition={{ duration: 0.4 }}
-        >
-          <span className="text-brand font-black text-sm">P</span>
-          <span className="font-bold text-sm tabular-nums">
-            {balance.toLocaleString()}
-          </span>
-        </motion.div>
+        <div className="flex items-center gap-2">
+          {/* 포인트 */}
+          <motion.div
+            key={balance}
+            className="flex items-center gap-1.5 bg-brand/15 border border-brand/30 px-3 py-1.5 rounded-full"
+            initial={{ scale: 1.15, color: "#FF8200" }}
+            animate={{ scale: 1, color: "#ffffff" }}
+            transition={{ duration: 0.4 }}
+          >
+            <span className="text-brand font-black text-sm">P</span>
+            <span className="font-bold text-sm tabular-nums">{balance.toLocaleString()}</span>
+          </motion.div>
+          {/* 충전 버튼 */}
+          <button
+            onClick={() => charge()}
+            disabled={isCharging || !user}
+            className="text-xs font-bold px-3 py-1.5 rounded-full bg-green-600/80 text-white active:scale-95 transition-transform disabled:opacity-50"
+          >
+            {isCharging ? "충전 중..." : "+1만P"}
+          </button>
+        </div>
       </motion.div>
 
       {/* ── 에러 토스트 ─────────────────────────────────────────── */}

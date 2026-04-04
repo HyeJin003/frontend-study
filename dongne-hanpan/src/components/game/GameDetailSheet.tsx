@@ -61,7 +61,8 @@ function GameDetail({ game, onClose, onJoin, isJoining }: GameDetailSheetProps &
   const location  = (extra?.location as string) ?? "장소 미정";
   const date      = (extra?.date as string) ?? "";
   const maxP      = (extra?.maxPlayers as number) ?? 0;
-  const curP      = (extra?.currentPlayers as number) ?? 0;
+  // 방장(1명) + replies 수로 현재 참가자 계산
+  const curP      = 1 + (game.replies?.length ?? 0);
   const isFull    = maxP > 0 && curP >= maxP;
   const color     = SPORT_COLOR[sport] ?? "#FF8200";
   const emoji     = SPORT_EMOJI[sport] ?? "🏅";
