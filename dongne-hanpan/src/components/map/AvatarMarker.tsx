@@ -19,21 +19,46 @@ interface AvatarMarkerProps {
   username?: string;
 }
 
-// clothingColor 코드 → hex 매핑 (avataaars 기본 팔레트)
+// clothingColor 코드 → hex 매핑
 const CLOTHES_COLOR_MAP: Record<string, string> = {
   black: "#262e33", blue01: "#65c9ff", blue02: "#5199e4", blue03: "#25557c",
-  gray01: "#e6e6e6", gray02: "#929598", heather: "#3c4f5c", pastelBlue: "#b1e2ff",
+  gray01: "#929598", gray02: "#b2bec3", heather: "#3c4f5c", pastelBlue: "#b1e2ff",
   pastelGreen: "#a7ffc4", pastelOrange: "#ffdeb5", pastelRed: "#ffafb9",
-  pastelYellow: "#ffffb1", pink: "#ff488e", red: "#ff5c5c", white: "#ffffff",
+  pastelYellow: "#ffffb1", pink: "#ff488e", red: "#ff5c5c", white: "#f8f8f8",
   d6b370: "#d6b370",
 };
 
-/** 기존 avataaars 상체 + CSS 하체(다리+신발) 합성 전신 캐릭터 */
+/** avataaars SVG에 SVG 다리+신발을 직접 삽입해 전신 캐릭터로 만들기 */
+function appendLegs(svgStr: string, pantsColor: string, shoeColor: string): string {
+  // viewBox 높이 264×280 → 264×400 으로 확장
+  const expanded = svgStr
+    .replace(/viewBox="0 0 264 280"/, 'viewBox="0 0 264 400"')
+    .replace(/height="[^"]*"/, 'height="100%"')
+    .replace(/width="[^"]*"/, 'width="100%"');
+
+  const legs = `
+    <g>
+      <!-- 왼쪽 다리 -->
+      <rect x="98" y="218" width="30" height="68" rx="8" fill="${pantsColor}"/>
+      <!-- 오른쪽 다리 -->
+      <rect x="136" y="218" width="30" height="68" rx="8" fill="${pantsColor}"/>
+      <!-- 왼쪽 신발 -->
+      <ellipse cx="113" cy="291" rx="24" ry="10" fill="${shoeColor}"/>
+      <rect x="89" y="283" width="30" height="10" rx="4" fill="${shoeColor}"/>
+      <!-- 오른쪽 신발 -->
+      <ellipse cx="151" cy="291" rx="24" ry="10" fill="${shoeColor}"/>
+      <rect x="145" y="283" width="30" height="10" rx="4" fill="${shoeColor}"/>
+    </g>
+  `;
+  return expanded.replace('</svg>', legs + '</svg>');
+}
+
+/** 전신 avataaars 캐릭터 */
 function MiniDiceBear({ gender = "male", custom }: { gender: Gender; custom?: AvatarCustom }) {
-  const svgString = useMemo(() => {
+  const fullSvg = useMemo(() => {
     const avatar = createAvatar(avataaars, {
       seed: custom ? `${custom.top}-${custom.hairColor}-${gender}` : gender,
-      size: 120,
+      size: 264,
       ...(custom ? {
         mouth: [custom.mouth as never],
         eyes: [custom.eyes as never],
@@ -51,35 +76,19 @@ function MiniDiceBear({ gender = "male", custom }: { gender: Gender; custom?: Av
       backgroundColor: ["transparent" as never],
       backgroundType: ["solid" as never],
     });
-    return avatar.toString();
+
+    const pantsColor = custom?.clothingColor
+      ? (CLOTHES_COLOR_MAP[custom.clothingColor] ?? `#${custom.clothingColor}`)
+      : "#5199e4";
+
+    return appendLegs(avatar.toString(), pantsColor, "#222233");
   }, [gender, custom]);
 
-  // 의상 색으로 바지 색 결정
-  const pantsHex = custom?.clothingColor
-    ? (CLOTHES_COLOR_MAP[custom.clothingColor] ?? `#${custom.clothingColor}`)
-    : "#3b82f6";
-  // 피부색으로 신발 색 결정 (어두운 계열)
-  const shoeHex = "#1e1e2e";
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 110 }}>
-      {/* 상체: avataaars SVG (아래 20% 자름 — 셔츠 끝까지만) */}
-      <div style={{ width: 110, height: 105, overflow: "hidden" }}
-        dangerouslySetInnerHTML={{ __html: svgString }}
-      />
-      {/* 허리 연결 패드 */}
-      <div style={{ width: 46, height: 6, background: pantsHex, marginTop: -4, borderRadius: "0 0 4px 4px" }} />
-      {/* 다리 */}
-      <div style={{ display: "flex", gap: 8, marginTop: 1 }}>
-        <div style={{ width: 19, height: 38, background: pantsHex, borderRadius: "2px 2px 0 0" }} />
-        <div style={{ width: 19, height: 38, background: pantsHex, borderRadius: "2px 2px 0 0" }} />
-      </div>
-      {/* 신발 */}
-      <div style={{ display: "flex", gap: 4, marginTop: 1 }}>
-        <div style={{ width: 26, height: 10, background: shoeHex, borderRadius: "3px 8px 8px 3px", marginLeft: -4 }} />
-        <div style={{ width: 26, height: 10, background: shoeHex, borderRadius: "8px 3px 3px 8px", marginRight: -4 }} />
-      </div>
-    </div>
+    <div
+      style={{ width: 115, height: 175 }}
+      dangerouslySetInnerHTML={{ __html: fullSvg }}
+    />
   );
 }
 
