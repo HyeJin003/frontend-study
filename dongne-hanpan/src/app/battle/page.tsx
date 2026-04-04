@@ -27,7 +27,7 @@ function sportColor(sport: string) {
 export default function BattlePage() {
   const router = useRouter();
   const qc = useQueryClient();
-  const myNeighborhood = useAuthStore(selectNeighborhood) ?? "내 동네";
+  const myNeighborhood = useAuthStore(selectNeighborhood);
 
   const [filterSport, setFilterSport] = useState<string | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -43,7 +43,7 @@ export default function BattlePage() {
   const { mutate: createBattle, isPending: isCreating } = useMutation({
     mutationFn: () => {
       const deadline = new Date(Date.now() + deadlineDays * 86400_000).toISOString();
-      return battleService.createBattle(createSport, myNeighborhood, deadline);
+      return battleService.createBattle(createSport, myNeighborhood ?? "알 수 없음", deadline);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: BATTLES_KEY });
@@ -72,7 +72,7 @@ export default function BattlePage() {
             </button>
             <div>
               <h1 className="font-black text-lg">동네 배틀 ⚔️</h1>
-              <p className="text-white/40 text-xs">{myNeighborhood} · 운동 인증으로 땅 차지!</p>
+              <p className="text-white/40 text-xs">{myNeighborhood ?? "동네 미설정"} · 운동 인증으로 땅 차지!</p>
             </div>
           </div>
           <HapticButton
@@ -171,7 +171,7 @@ export default function BattlePage() {
 }
 
 // ── 동네 점수 배너 ─────────────────────────────────────────────────────────────
-function NeighborhoodScoreBanner({ myNeighborhood }: { myNeighborhood: string }) {
+function NeighborhoodScoreBanner({ myNeighborhood }: { myNeighborhood: string | null }) {
   const { data: scores = {} } = useQuery({
     queryKey: ["territory-scores"],
     queryFn: battleService.getNeighborhoodScores,
@@ -179,7 +179,7 @@ function NeighborhoodScoreBanner({ myNeighborhood }: { myNeighborhood: string })
   });
 
   const sorted = Object.entries(scores).sort((a, b) => b[1] - a[1]).slice(0, 3);
-  const myScore = scores[myNeighborhood] ?? 0;
+  const myScore = myNeighborhood ? (scores[myNeighborhood] ?? 0) : 0;
   const maxScore = Math.max(...Object.values(scores), 1);
 
   return (
@@ -190,21 +190,23 @@ function NeighborhoodScoreBanner({ myNeighborhood }: { myNeighborhood: string })
     >
       <div className="flex items-center justify-between mb-3">
         <p className="text-white font-bold text-sm">🏆 동네 순위</p>
-        <div className="bg-brand/20 border border-brand/40 px-2 py-0.5 rounded-full">
-          <span className="text-brand text-xs font-bold">{myNeighborhood} {myScore}점</span>
-        </div>
+        {myNeighborhood && (
+          <div className="bg-brand/20 border border-brand/40 px-2 py-0.5 rounded-full">
+            <span className="text-brand text-xs font-bold">{myNeighborhood} {myScore}점</span>
+          </div>
+        )}
       </div>
       <div className="space-y-2">
         {sorted.map(([nh, score], i) => (
           <div key={nh} className="flex items-center gap-2">
             <span className="text-xs w-4 text-white/40 font-bold">{i + 1}</span>
-            <span className={`text-xs font-bold flex-shrink-0 ${nh === myNeighborhood ? "text-brand" : "text-white/70"}`}>
+            <span className={`text-xs font-bold flex-shrink-0 ${myNeighborhood && nh === myNeighborhood ? "text-brand" : "text-white/70"}`}>
               {nh}
             </span>
             <div className="flex-1 h-1.5 bg-white/5 rounded-full overflow-hidden">
               <motion.div
                 className="h-full rounded-full"
-                style={{ backgroundColor: nh === myNeighborhood ? "#FF8200" : "#6B7280" }}
+                style={{ backgroundColor: myNeighborhood && nh === myNeighborhood ? "#FF8200" : "#6B7280" }}
                 initial={{ width: 0 }}
                 animate={{ width: `${(score / maxScore) * 100}%` }}
                 transition={{ duration: 0.8, delay: i * 0.1 }}
@@ -226,7 +228,7 @@ function BattleCard({
   battle, myNeighborhood, index, onClick,
 }: {
   battle: BattleRoom;
-  myNeighborhood: string;
+  myNeighborhood: string | null;
   index: number;
   onClick: () => void;
 }) {
@@ -234,7 +236,7 @@ function BattleCard({
   const neighborhood = battle.extra?.neighborhood ?? "알 수 없음";
   const totalCount = battle.extra?.totalCount ?? 0;
   const deadline = battle.extra?.deadline ? new Date(battle.extra.deadline) : null;
-  const isMyNeighborhood = neighborhood === myNeighborhood;
+  const isMyNeighborhood = !!myNeighborhood && neighborhood === myNeighborhood;
   const color = sportColor(sport);
   const daysLeft = deadline
     ? Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / 86400_000))
@@ -309,7 +311,7 @@ function CreateBattleSheet({
   deadlineDays: number;
   setDeadlineDays: (d: number) => void;
   isPending: boolean;
-  myNeighborhood: string;
+  myNeighborhood: string | null;
   onClose: () => void;
   onSubmit: () => void;
 }) {

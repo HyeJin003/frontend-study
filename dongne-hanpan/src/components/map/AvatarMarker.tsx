@@ -28,37 +28,12 @@ const CLOTHES_COLOR_MAP: Record<string, string> = {
   d6b370: "#d6b370",
 };
 
-/** avataaars SVG에 SVG 다리+신발을 직접 삽입해 전신 캐릭터로 만들기 */
-function appendLegs(svgStr: string, pantsColor: string, shoeColor: string): string {
-  // viewBox 높이 264×280 → 264×400 으로 확장
-  const expanded = svgStr
-    .replace(/viewBox="0 0 264 280"/, 'viewBox="0 0 264 400"')
-    .replace(/height="[^"]*"/, 'height="100%"')
-    .replace(/width="[^"]*"/, 'width="100%"');
-
-  const legs = `
-    <g>
-      <!-- 왼쪽 다리 -->
-      <rect x="98" y="218" width="30" height="68" rx="8" fill="${pantsColor}"/>
-      <!-- 오른쪽 다리 -->
-      <rect x="136" y="218" width="30" height="68" rx="8" fill="${pantsColor}"/>
-      <!-- 왼쪽 신발 -->
-      <ellipse cx="113" cy="291" rx="24" ry="10" fill="${shoeColor}"/>
-      <rect x="89" y="283" width="30" height="10" rx="4" fill="${shoeColor}"/>
-      <!-- 오른쪽 신발 -->
-      <ellipse cx="151" cy="291" rx="24" ry="10" fill="${shoeColor}"/>
-      <rect x="145" y="283" width="30" height="10" rx="4" fill="${shoeColor}"/>
-    </g>
-  `;
-  return expanded.replace('</svg>', legs + '</svg>');
-}
-
-/** 전신 avataaars 캐릭터 */
+/** 전신 avataaars 캐릭터 — 상반신 SVG + 하반신 SVG 분리 렌더링 */
 function MiniDiceBear({ gender = "male", custom }: { gender: Gender; custom?: AvatarCustom }) {
-  const fullSvg = useMemo(() => {
+  const avatarSvg = useMemo(() => {
     const avatar = createAvatar(avataaars, {
       seed: custom ? `${custom.top}-${custom.hairColor}-${gender}` : gender,
-      size: 264,
+      size: 280,
       ...(custom ? {
         mouth: [custom.mouth as never],
         eyes: [custom.eyes as never],
@@ -76,19 +51,34 @@ function MiniDiceBear({ gender = "male", custom }: { gender: Gender; custom?: Av
       backgroundColor: ["transparent" as never],
       backgroundType: ["solid" as never],
     });
-
-    const pantsColor = custom?.clothingColor
-      ? (CLOTHES_COLOR_MAP[custom.clothingColor] ?? `#${custom.clothingColor}`)
-      : "#5199e4";
-
-    return appendLegs(avatar.toString(), pantsColor, "#222233");
+    return avatar.toString()
+      .replace(/width="[^"]*"/, 'width="100%"')
+      .replace(/height="[^"]*"/, 'height="100%"');
   }, [gender, custom]);
 
+  const pantsColor = useMemo(() => {
+    if (!custom?.clothingColor) return "#5199e4";
+    return CLOTHES_COLOR_MAP[custom.clothingColor] ?? `#${custom.clothingColor}`;
+  }, [custom?.clothingColor]);
+
   return (
-    <div
-      style={{ width: 115, height: 175 }}
-      dangerouslySetInnerHTML={{ __html: fullSvg }}
-    />
+    <div style={{ width: 80, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      {/* 상반신: avataaars 원본 */}
+      <div style={{ width: 80, height: 80, overflow: "hidden" }} dangerouslySetInnerHTML={{ __html: avatarSvg }} />
+      {/* 하반신: 허리 + 다리 + 신발 */}
+      <svg width="80" height="66" viewBox="0 0 80 66" style={{ marginTop: -12, display: "block" }}>
+        {/* 허리 연결부 (셔츠 하단과 겹침) */}
+        <rect x="20" y="0" width="40" height="18" rx="5" fill={pantsColor} />
+        {/* 왼쪽 다리 */}
+        <rect x="20" y="12" width="16" height="40" rx="5" fill={pantsColor} />
+        {/* 오른쪽 다리 */}
+        <rect x="44" y="12" width="16" height="40" rx="5" fill={pantsColor} />
+        {/* 왼쪽 신발 */}
+        <ellipse cx="28" cy="57" rx="13" ry="6" fill="#1a1a2e" />
+        {/* 오른쪽 신발 */}
+        <ellipse cx="52" cy="57" rx="13" ry="6" fill="#1a1a2e" />
+      </svg>
+    </div>
   );
 }
 

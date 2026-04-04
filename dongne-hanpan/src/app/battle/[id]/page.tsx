@@ -40,7 +40,7 @@ export default function BattleDetailPage() {
   });
 
   const { mutate: certify, isPending: isCertifying } = useMutation({
-    mutationFn: (n: number) => battleService.certify(battleId, n),
+    mutationFn: (n: number) => battleService.certify(battleId, n, battle!.extra),
     onSuccess: (_, n) => {
       qc.invalidateQueries({ queryKey: battleKey });
       qc.invalidateQueries({ queryKey: ["battles"] });

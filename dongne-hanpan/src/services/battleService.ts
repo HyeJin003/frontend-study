@@ -67,8 +67,8 @@ export const battleService = {
     await apiInstance.delete(`/posts/${id}`);
   },
 
-  /** 운동 횟수 인증 — reply에 count 저장 */
-  async certify(battleId: number, count: number): Promise<Reply> {
+  /** 운동 횟수 인증 — reply 추가 + 배틀 totalCount PATCH */
+  async certify(battleId: number, count: number, currentExtra: BattleRoom["extra"]): Promise<Reply> {
     const res = await apiInstance.post<{ item: Reply }>(
       `/posts/${battleId}/replies`,
       {
@@ -76,6 +76,12 @@ export const battleService = {
         extra: { count },
       },
     );
+    await apiInstance.patch(`/posts/${battleId}`, {
+      extra: {
+        ...currentExtra,
+        totalCount: (currentExtra.totalCount ?? 0) + count,
+      },
+    });
     return res.data.item;
   },
 
