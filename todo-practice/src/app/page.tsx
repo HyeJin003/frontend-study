@@ -12,14 +12,16 @@ const LESSONS = [
     tags: ["#useState", "#CRUD", "#filter", "#edit"],
     done: true,
     href: "/01",
+    hrefBlind: "/01b",
   },
   {
     num: "02",
     title: "useReducer",
     desc: "상태 로직을 reducer로 분리하기",
     tags: ["#useReducer", "#dispatch", "#action"],
-    done: false,
-    href: null,
+    done: true,
+    href: "/02",
+    hrefBlind: "/02b",
   },
   {
     num: "03",
@@ -28,6 +30,7 @@ const LESSONS = [
     tags: ["#useContext", "#전역상태"],
     done: false,
     href: null,
+    hrefBlind: null,
   },
   {
     num: "04",
@@ -36,6 +39,7 @@ const LESSONS = [
     tags: ["#useEffect", "#localStorage"],
     done: false,
     href: null,
+    hrefBlind: null,
   },
   {
     num: "05",
@@ -44,6 +48,7 @@ const LESSONS = [
     tags: ["#useEffect", "#cleanup", "#deps"],
     done: false,
     href: null,
+    hrefBlind: null,
   },
 ];
 
@@ -82,20 +87,22 @@ export default function Home() {
       </header>
 
       <main className="px-6 py-10 max-w-4xl mx-auto">
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-8">
+        <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
           useState부터 시작하는 Todo 반복 학습. 같은 앱을 다른 방법으로 계속 만든다.
+        </p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 mb-8">
+          학습 순서: 정답 읽기 → <span className="text-blue-500 font-medium">보고치기</span> → <span className="text-purple-500 font-medium">안보고치기</span>
         </p>
 
         {/* 카드 그리드 */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {LESSONS.map((lesson) =>
             lesson.done ? (
-              <Link
+              <div
                 key={lesson.num}
-                href={lesson.href!}
-                className="group relative flex flex-col gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-5 hover:-translate-y-1 hover:shadow-xl dark:hover:shadow-black/40 transition-all duration-200"
+                className="relative flex flex-col gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-zinc-900 p-5"
               >
-                {/* 배지 */}
+                {/* 완료 배지 */}
                 <span className="absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-medium">
                   완료
                 </span>
@@ -105,13 +112,13 @@ export default function Home() {
                 </span>
                 {/* 제목 + 설명 */}
                 <div>
-                  <h2 className="font-semibold text-base text-gray-900 dark:text-gray-100 group-hover:text-blue-500 transition-colors">
+                  <h2 className="font-semibold text-base text-gray-900 dark:text-gray-100">
                     {lesson.title}
                   </h2>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{lesson.desc}</p>
                 </div>
                 {/* 태그 */}
-                <div className="flex flex-wrap gap-1 mt-auto">
+                <div className="flex flex-wrap gap-1">
                   {lesson.tags.map((tag) => (
                     <span
                       key={tag}
@@ -121,17 +128,32 @@ export default function Home() {
                     </span>
                   ))}
                 </div>
-                {/* 하단 화살표 */}
-                <div className="text-xs text-blue-500 font-medium mt-1 group-hover:underline">
-                  시작하기 →
+                {/* 보고치기 / 안보고치기 링크 */}
+                <div className="flex gap-2 mt-auto pt-3 border-t border-gray-100 dark:border-white/5">
+                  <Link
+                    href={lesson.href!}
+                    className="flex-1 text-center text-xs font-medium py-1.5 rounded-lg
+                      bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400
+                      hover:bg-blue-100 dark:hover:bg-blue-500/20 transition-colors"
+                  >
+                    보고치기 →
+                  </Link>
+                  <Link
+                    href={lesson.hrefBlind!}
+                    className="flex-1 text-center text-xs font-medium py-1.5 rounded-lg
+                      bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400
+                      hover:bg-purple-100 dark:hover:bg-purple-500/20 transition-colors"
+                  >
+                    안보고치기 →
+                  </Link>
                 </div>
-              </Link>
+              </div>
             ) : (
               <div
                 key={lesson.num}
                 className="relative flex flex-col gap-3 rounded-2xl border border-gray-200 dark:border-white/5 bg-white dark:bg-zinc-900 p-5 opacity-40 cursor-not-allowed select-none"
               >
-                {/* 배지 */}
+                {/* 준비중 배지 */}
                 <span className="absolute top-4 right-4 text-xs px-2 py-0.5 rounded-full bg-gray-100 dark:bg-white/10 text-gray-400 font-medium">
                   준비중
                 </span>
