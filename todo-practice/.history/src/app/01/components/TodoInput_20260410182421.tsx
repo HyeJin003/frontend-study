@@ -1,0 +1,25 @@
+"use client";
+
+import { useState } from "react";
+
+// ─────────────────────────────────────────────────────────────
+// TodoInput: 새 할일 입력 컴포넌트
+//
+// ❓ 왜 'use client'가 필요한가?
+//   → useState, 이벤트 핸들러(onChange, onKeyDown)는
+//     브라우저에서만 동작 → 클라이언트 컴포넌트 필수
+// ─────────────────────────────────────────────────────────────
+interface TodoInputProps {
+  onAdd: (text: string) => void;
+}
+export default function TodoInput({ onAdd }: TodoInputProps) {
+  // ❓ 왜 input 값을 state로 관리하는가? (controlled input)
+  //   → React가 input 값을 항상 알고 있어야 유효성 검사, 초기화 가능
+  //   → value={text} + onChange 쌍이 없으면 uncontrolled (19번 비교)
+
+  const [text, setText] = useState("");
+
+  function handleAdd(): void {
+    const trimmed = text.trim();
+  }
+}

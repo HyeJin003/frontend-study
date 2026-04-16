@@ -1,0 +1,162 @@
+"use client";
+
+// ═══════════════════════════════════════════════════════════════
+// 01번 연습: useState 기본
+// 🎯 목표: useState만으로 Todo CRUD + 필터 + 편집 완성
+// 📖 정답: todo-100/src/app/01/page.tsx 참고
+// ═══════════════════════════════════════════════════════════════
+// import TodoEmpty from "./components/TodoEmpty";
+import { useState } from "react";
+import type { Todo, FilterType } from "./types";
+import TodoInput from "@/app/01/components/TodoInput";
+import TodoEmpty from "@/app/01/components/TodoEmpty";
+import TodoItem from "@/app/01/components/TodoItem";
+import Link from "next/link";
+
+// TODO: TodoInput, TodoItem, TodoEmpty, TodoFooter 컴포넌트 import
+// 힌트: components/ 폴더를 직접 만들고 정답 참고해서 작성
+
+export default function TodoPage() {
+  // TODO 1: todos 상태를 선언하세요
+  // 힌트: useState<Todo[]>([])
+  // ❓ 왜 <Todo[]>를 붙여야 하는가?
+  const [todos, setTodos] = useState<Todo[]>([]);
+
+  // TODO 2: filter 상태를 선언하세요
+  // 힌트: useState<FilterType>('all')
+  const [filter, setFilter] = useState<FilterType>("all");
+  // TODO 3: addTodo 함수를 작성하세요
+  // 요구사항:
+  //   - crypto.randomUUID()로 id 생성
+  //   - completed: false 로 시작
+  //   - 최신 항목이 위에 오도록 추가 (앞에 추가)
+  function addTodo(text: string): void {
+    // 여기에 작성
+    const newTodo: Todo = {
+      id: crypto.randomUUID(),
+      text,
+      completed: false,
+      createdAt: Date.now(),
+    };
+    // 새 항목을 앞에 추가
+    setTodos((prev) => [newTodo, ...prev]);
+  }
+
+  // TODO 4: toggleTodo 함수를 작성하세요
+  // 요구사항: id에 해당하는 todo의 completed를 반전
+  function toggleTodo(id: string): void {
+    // 여기에 작성  이건 클릭 전: ☐ 운동하기  (completed:false ) 클릭 후: ☑ 운동하기  (completed:true)
+    setTodos((prev) =>
+      prev.map((todo) =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo,
+      ),
+    );
+  }
+
+  // TODO 5: deleteTodo 함수를 작성하세요
+  // 요구사항: id에 해당하는 todo를 배열에서 제거
+  function deleteTodo(id: string): void {
+    // 여기에 작성
+
+    setTodos((prev) => prev.filter((todo) => todo.id !== id));
+  }
+
+  // TODO 6: editTodo 함수를 작성하세요
+  // 요구사항: id에 해당하는 todo의 text를 변경
+  function editTodo(id: string, text: string): void {
+    // 여기에 작성
+    setTodos((prev) =>
+      prev.map((todo) => (todo.id === id ? { ...todo, text } : todo)),
+    );
+  }
+
+  // TODO 7: clearCompleted 함수를 작성하세요
+  // 요구사항: completed === true 인 항목 모두 제거
+  function clearCompleted(): void {
+    // 여기에 작성
+    setTodos((prev) => prev.filter((todo) => !todo.completed));
+  }
+
+  // TODO 8: filteredTodos를 계산하세요
+  // 힌트: todos.filter() 사용
+  // ❓ 왜 state가 아닌 계산값으로 만드는가?
+  const filteredTodos: Todo[] = todos.filter((todo) => {
+    if (filter === "active") {
+      return !todo.completed;
+    }
+    if (filter === "completed") {
+      return todo.completed;
+    }
+    return true;
+  });
+  // 여기를 수정하세요
+
+  // TODO 9: activeCount, completedCount를 계산하세요
+  const activeCount = todos.filter((total) => !total.completed).length; // 여기를 수정하세요
+  const completedCount = todos.filter((total) => total.completed).length; // 여기를 수정하세요
+
+  return (
+    <div className="mx-auto max-w-xl px-4 py-10">
+      {/* 뒤로가기 */}
+      <Link
+        href="/"
+        className="mb-6 inline-flex items-center gap-1 text-sm text-gray-500 hover:text-gray-800"
+      >
+        목록으로
+      </Link>
+      <h1 className="mb-6 text-2xl font-bold">01. useState 기본 — 연습</h1>
+      {/* TODO 10: TodoInput 컴포넌트를 추가하세요 */}
+      <TodoInput onAdd={addTodo} />
+      {/* 힌트: <TodoInput onAdd={addTodo} /> */}
+      {/* TODO 11: 리스트를 렌더링하세요 */}
+      {/* 조건:
+          - filteredTodos가 비어있으면 TodoEmpty 표시
+          - 비어있지 않으면 filteredTodos.map()으로 TodoItem 렌더링
+          - key는 반드시 todo.id 사용 */}
+
+      {todos.length > 0 && (
+        <div className="mt-4 flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={activeCount === 0}
+            onChange={() => {
+              const shouldComplete = activeCount > 0;
+              setTodos((prev) =>
+                prev.map((todo) => ({ ...todo, completed: shouldComplete })),
+              );
+            }}
+            id="toggle-all"
+            className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-blue-500"
+          />
+          <label
+            htmlFor="toggle-all"
+            className="cursor-pointer text-sm text-gray-600"
+          >
+            전체 {activeCount === 0 ? "미완료로 변경" : "완료로 변경"}
+          </label>
+        </div>
+      )}
+
+      <div className="mt-4">
+        {filteredTodos.length === 0 ?(
+          message = {
+              filter === "active"
+                ? "진행 중인 할일이 없어요!"
+                : filter === "completed"
+                  ? "완료된 할일이 없어요!"
+                  : "할일을 추가해보세요!"
+            })
+      </div>
+
+      {/* TODO 12: TodoFooter를 추가하세요 */}
+      {/* 힌트: todos.length > 0 일 때만 표시 */}
+      <TodoItem
+        todo={{ id: "1", text: "테스트", completed: false, createdAt: 0 }}
+        onToggle={() => {}}
+        onDelete={() => {}}
+        onEdit={() => {}}
+      />
+      <div></div>
+    </div>
+  );
+}

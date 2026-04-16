@@ -1,0 +1,11 @@
+"use client";
+
+// ─────────────────────────────────────────────────────────────
+// TodoInput: 새 할일 입력 컴포넌트
+//
+// ❓ 왜 'use client'가 필요한가?
+//   → useState, 이벤트 핸들러(onChange, onKeyDown)는
+//     브라우저에서만 동작 → 클라이언트 컴포넌트 필수
+// ─────────────────────────────────────────────────────────────
+interface TodoInputProps {}
+export default function TodoInput() {}

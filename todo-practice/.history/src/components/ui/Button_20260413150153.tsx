@@ -1,0 +1,22 @@
+// ─────────────────────────────────────────────────────────────
+// 공통 컴포넌트: Button
+//
+// 실무에서 Button을 공통화하는 이유:
+//   1. variant(primary/danger/ghost)를 한 곳에서 관리
+//   2. disabled 상태, 로딩 상태를 일관되게 처리
+//   3. 접근성 속성(aria-*)을 강제할 수 있음
+// ─────────────────────────────────────────────────────────────
+
+import { ComponentPropsWithoutRef } from "react";
+
+// React의 기본 button 속성을 모두 상속받으면서 확장
+// ComponentPropsWithoutRef → ref 제외한 모든 button 속성
+// (ref가 필요하면 forwardRef 패턴 사용 — 13번 예제에서 배움)
+
+type ButtonVariant = "primary" | "danger" | "ghost";
+type ButtonSize = "sm" | "md" | "lg";
+
+type ButtonProps = ComponentPropsWithoutRef<"button"> & {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+};
