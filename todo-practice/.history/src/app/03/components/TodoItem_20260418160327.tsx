@@ -1,0 +1,24 @@
+'use client'
+
+// ─────────────────────────────────────────────────────────────
+// TodoItem: 개별 Todo 항목
+// 📖 정답: todo-100/src/app/03/components/TodoItem.tsx
+//
+// TODO [Step 4-C]:
+//   ← 02번: onToggle, onDelete, onEdit 3개 props를 받았음
+//
+//   03번: todo만 받고 나머지는 Context에서 직접 꺼냄
+//     <TodoItem todo={todo} />
+//     const { toggleTodo, deleteTodo, editTodo } = useTodoContext()
+// ─────────────────────────────────────────────────────────────
+
+import type { Todo } from '../types'
+
+interface TodoItemProps {
+  todo: Todo
+}
+
+export default function TodoItem({ todo }: TodoItemProps) {
+  // 여기에 useTodoContext() 사용 후 구현
+  return <div>{todo.text}</div>
+}

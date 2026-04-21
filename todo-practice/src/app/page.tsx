@@ -25,12 +25,12 @@ const LESSONS = [
   },
   {
     num: "03",
-    title: "Context + useReducer",
-    desc: "전역 상태 관리 패턴",
-    tags: ["#useContext", "#전역상태"],
-    done: false,
-    href: null,
-    hrefBlind: null,
+    title: "useContext + useState",
+    desc: "prop drilling 해결, Provider 패턴",
+    tags: ["#useContext", "#createContext", "#Provider"],
+    done: true,
+    href: "/03",
+    hrefBlind: "/03b",
   },
   {
     num: "04",
