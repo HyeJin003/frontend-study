@@ -64,7 +64,7 @@ npm run dev   # 브라우저 켜두고
 
 - [x] 1.  useState 기본
 - [x] 2.  useReducer
-- [ ] 3.  useContext + useState
+- [x] 3.  useContext + useState
 - [ ] 4.  useContext + useReducer
 - [ ] 5.  커스텀훅 분리 (useTodos)
 - [ ] 6.  useRef 활용
