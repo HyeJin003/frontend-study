@@ -34,12 +34,12 @@ const LESSONS = [
   },
   {
     num: "04",
-    title: "localStorage 연동",
-    desc: "새로고침해도 데이터 유지",
-    tags: ["#useEffect", "#localStorage"],
-    done: false,
-    href: null,
-    hrefBlind: null,
+    title: "useContext + useReducer",
+    desc: "State/Dispatch Context 분리로 리렌더 최적화",
+    tags: ["#useContext", "#useReducer", "#dispatch", "#리렌더최적화"],
+    done: true,
+    href: "/04",
+    hrefBlind: "/04b",
   },
   {
     num: "05",

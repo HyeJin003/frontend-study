@@ -10,5 +10,5 @@ interface TodoItemProps {
 }
 
 export default function TodoItem({ todo }: TodoItemProps) {
-  return <div>TODO: {todo.text}</div>
+  return <div>TODO</div>
 }
