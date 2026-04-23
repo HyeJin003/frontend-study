@@ -44,11 +44,11 @@ const LESSONS = [
   {
     num: "05",
     title: "useEffect 심화",
-    desc: "의존성 배열과 클린업 완전 정복",
-    tags: ["#useEffect", "#cleanup", "#deps"],
+    desc: "localStorage + document.title + 검색 디바운스",
+    tags: ["#useEffect", "#cleanup", "#deps", "#localStorage", "#debounce"],
     done: false,
-    href: null,
-    hrefBlind: null,
+    href: "/05",
+    hrefBlind: "/05b",
   },
 ];
 

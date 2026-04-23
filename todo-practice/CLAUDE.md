@@ -5,6 +5,28 @@
 todo-practice 안에 새 연습 파일(page.tsx, context.tsx, reducer.ts 등)을 만들 때
 반드시 파일 상단 주석에 아래 항목을 모두 포함할 것:
 
+## 연습 파일 구현 규칙
+
+- 연습 파일의 함수/컴포넌트 본문은 **절대 구현하지 말 것**
+- TODO 주석 + stub(빈 값 반환)만 남겨둘 것
+- 사용자가 직접 채워 넣어야 학습이 됨
+
+```
+// ❌ 금지: 구현 채워넣기
+export function TodoProvider({ children }) {
+  const [todos, setTodos] = useState([])
+  function addTodo() { ... }  ← 이렇게 하면 안 됨
+}
+
+// ✅ 올바른 방법: stub만 남김
+export function TodoProvider({ children }) {
+  // 여기에 작성
+  return <TodoContext.Provider value={stubValue}>{children}</TodoContext.Provider>
+}
+```
+
+---
+
 ```
 // ═══════════════════════════════════════════════════════════════
 // XX번 연습: <개념 이름>
