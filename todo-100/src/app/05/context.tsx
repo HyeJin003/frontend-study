@@ -1,5 +1,25 @@
 'use client'
 
+// ── 이 파일을 설계할 때 한 고민 ────────────────────────────────
+//
+//   1. 화면에 뭘 보여줘야 하나?          → todos, filteredTodos, 카운트, filter, searchQuery
+//   2. 어떤 상태가 바뀌나?               → todos(CRUD), filter, searchQuery(디바운스)
+//   3. 그 상태를 바꾸는 함수는?          → dispatch + setSearchQuery
+//   4. 타입을 어떻게 정의했나?           → 04번 StateValue + searchQuery/setSearchQuery 추가
+//   5. 자식 컴포넌트들이 뭘 필요로 하나? → TodoSearch만 searchQuery 필요 → StateContext에 포함
+//
+//   ── 면접 포인트 ──────────────────────────────────────────────
+//   Q: "useEffect deps 배열이 왜 중요한가요?"
+//   A: "deps가 바뀔 때만 effect가 실행됩니다.
+//       [] → 마운트 한 번만 (초기 로드),
+//       [state.todos] → todos 바뀔 때마다 (저장),
+//       [rawQuery] + clearTimeout → 마지막 입력 후 300ms에만 (디바운스)."
+//
+//   Q: "디바운스에서 클린업이 왜 필요한가요?"
+//   A: "사용자가 빠르게 타이핑할 때마다 setTimeout이 쌓입니다.
+//       클린업(clearTimeout)으로 이전 타이머를 취소해야
+//       마지막 입력 후 300ms에 딱 한 번만 실행됩니다."
+//
 // ── useEffect 3가지 패턴 ────────────────────────────────────────
 // 1. localStorage 저장/불러오기
 // 2. document.title 업데이트
