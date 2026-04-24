@@ -50,6 +50,15 @@ const LESSONS = [
     href: "/05",
     hrefBlind: "/05b",
   },
+  {
+    num: "06",
+    title: "useRef",
+    desc: "DOM 접근(자동 포커스) + 렌더 간 값 유지(이전 카운트)",
+    tags: ["#useRef", "#DOM", "#prevCount", "#렌더최적화"],
+    done: false,
+    href: "/06",
+    hrefBlind: "/06b",
+  },
 ];
 
 function ThemeToggle() {
