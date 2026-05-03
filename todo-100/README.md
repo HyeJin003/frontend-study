@@ -1,36 +1,33 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Todo 100번 — 정답지
 
-## Getting Started
+React Todo 앱을 100가지 방법으로 구현하는 학습 정답 코드 저장소입니다.
 
-First, run the development server:
+## 먼저 읽을 것
+
+👉 **[STUDY_GUIDE.md](./STUDY_GUIDE.md)** — 정답지 읽는 법, 챕터별 구성, MDN/React 문서 찾는 법
+
+## 개발 서버
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 폴더 구조
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+src/app/
+├── 01/   useState 기본
+├── 02/   useReducer
+├── 03/   useContext + useState
+├── 04/   useContext + useReducer
+├── 05/   useEffect 심화
+├── 06/   useRef 커스텀 훅
+├── 07/   useEffect 커스텀 훅
+├── 08/   useCallback
+├── 09/   useMemo
+├── 10/   React.memo
+└── ...
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+각 번호 폴더 안의 파일은 **STUDY_GUIDE.md의 읽기 순서대로** 볼 것.

@@ -1,5 +1,27 @@
 'use client'
 
+// ─────────────────────────────────────────────────────────────
+// 📗 챕터 2 — Context 패턴 (03~05번)
+// 공통 규칙(파일 읽는 순서/주석 읽는 법/컴포넌트 설계) → 01번 page.tsx 상단 참고
+// ─────────────────────────────────────────────────────────────
+//
+// 이 챕터 읽는 순서:
+//   03번: types.ts → context.tsx → page.tsx → components/
+//   04번: types.ts → reducer.ts → context.tsx → page.tsx → components/
+//   05번: types.ts → reducer.ts → context.tsx → page.tsx → components/
+//
+// 이 챕터 React 문서:
+//   react.dev/reference/react/useContext
+//   react.dev/reference/react/useEffect → "Deep Dive: Lifecycle of Reactive Effects" 필독
+//   MDN localStorage, MDN document.title
+//
+// 이 챕터에서 생각해볼 것:
+//   - "prop drilling이 뭔가? 왜 문제인가? Context로 어떻게 해결하나?"
+//   - "왜 StateContext와 DispatchContext를 둘로 나누나?"
+//     → dispatch만 쓰는 컴포넌트가 state 변경에 리렌더되지 않음
+//   - 05번 context.tsx useEffect 4개의 deps — 각 배열이 왜 저렇게 설정됐나?
+//   - "useEffect의 클린업 함수가 없으면 디바운스가 왜 안 되나?"
+//
 // ═══════════════════════════════════════════════════════════════
 // 03번: useContext + useState — Context 정의
 // ═══════════════════════════════════════════════════════════════

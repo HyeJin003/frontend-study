@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auth 100 — 07~10번 학습 정리</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; font-size: 14px; line-height: 1.8; color: #1a1a1a; background: #fff; padding: 40px; max-width: 820px; margin: 0 auto; }
+    h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+    h2 { font-size: 20px; font-weight: 800; margin: 44px 0 14px; padding-bottom: 8px; border-bottom: 3px solid #e5e7eb; }
+    h3 { font-size: 15px; font-weight: 700; margin: 22px 0 8px; color: #111827; }
+    h4 { font-size: 13px; font-weight: 700; margin: 14px 0 6px; color: #374151; }
+    p  { margin-bottom: 10px; }
+    ul { padding-left: 20px; margin-bottom: 10px; }
+    li { margin-bottom: 4px; }
+    pre, code { font-family: 'Consolas', 'Courier New', monospace; }
+    pre  { background: #f3f4f6; border-radius: 8px; padding: 16px; margin: 10px 0 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.65; white-space: pre; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 12.5px; }
+    .badge { display: inline-block; padding: 3px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; margin-bottom: 8px; }
+    .badge-yellow { background: #FEF9C3; color: #854D0E; }
+    .badge-green  { background: #DCFCE7; color: #166534; }
+    .badge-purple { background: #EDE9FE; color: #5B21B6; }
+    .badge-blue   { background: #DBEAFE; color: #1E40AF; }
+    .badge-gray   { background: #F3F4F6; color: #374151; }
+    .box { border-radius: 8px; padding: 14px 18px; margin: 12px 0 16px; font-size: 13px; line-height: 1.7; }
+    .box-yellow { background: #FFFBEB; border: 1px solid #FDE68A; }
+    .box-green  { background: #F0FDF4; border: 1px solid #86EFAC; }
+    .box-purple { background: #F5F3FF; border: 1px solid #C4B5FD; }
+    .box-blue   { background: #EFF6FF; border: 1px solid #93C5FD; }
+    .box-red    { background: #FEF2F2; border: 1px solid #FCA5A5; }
+    .box-gray   { background: #F9FAFB; border: 1px solid #E5E7EB; }
+    .interview  { background: #F9FAFB; border-left: 4px solid #6366F1; padding: 14px 18px; margin: 14px 0; border-radius: 0 8px 8px 0; }
+    .interview p { margin-bottom: 8px; }
+    .q { font-weight: 700; color: #4F46E5; }
+    .a { color: #374151; }
+    table { width: 100%; border-collapse: collapse; margin: 12px 0 16px; font-size: 13px; }
+    th { background: #F3F4F6; padding: 9px 12px; text-align: left; font-weight: 700; border: 1px solid #E5E7EB; }
+    td { padding: 9px 12px; border: 1px solid #E5E7EB; vertical-align: top; line-height: 1.6; }
+    .flow { background: #F8FAFC; border: 1px solid #CBD5E1; border-radius: 8px; padding: 16px 20px; margin: 12px 0 16px; font-size: 13px; }
+    .flow-step { display: flex; align-items: flex-start; margin-bottom: 8px; }
+    .flow-num  { background: #6366F1; color: white; border-radius: 50%; width: 22px; height: 22px; min-width: 22px; font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; margin-right: 10px; margin-top: 2px; }
+    .page-break { page-break-before: always; }
+    .divider { border: none; border-top: 1px solid #E5E7EB; margin: 28px 0; }
+    .subtitle { color: #6B7280; font-size: 13px; margin-bottom: 28px; }
+    @media print {
+      body { padding: 24px; font-size: 13px; }
+      pre  { font-size: 11.5px; }
+      h2   { font-size: 17px; }
+      .page-break { page-break-before: always; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Auth 100 — 07~10번 학습 정리</h1>
+<p class="subtitle">소셜 로그인(Kakao · Naver) · 계정 연동 · session.provider | 2026-04-30</p>
+
+<!-- ═══════════════════════════════════════════════════════
+     공통 개념 먼저
+═══════════════════════════════════════════════════════ -->
+<h2>0. 먼저 알아야 할 공통 개념</h2>
+
+<h3>OAuth 2.0 이 뭐야?</h3>
+<p><strong>"내 비밀번호를 주지 않고 다른 앱에 권한을 위임하는 방식"</strong></p>
+<p>카카오 로그인 버튼을 눌렀을 때 흐름:</p>
+<div class="flow">
+  <div class="flow-step"><div class="flow-num">1</div><div>나 → 앱에게: "카카오로 로그인할게"</div></div>
+  <div class="flow-step"><div class="flow-num">2</div><div>앱 → 카카오 동의 화면으로 이동</div></div>
+  <div class="flow-step"><div class="flow-num">3</div><div>카카오 → 나에게: "이 앱이 네 이메일/닉네임 봐도 돼?" (동의 화면)</div></div>
+  <div class="flow-step"><div class="flow-num">4</div><div>수락 → 카카오가 <strong>code</strong> 발급 → 콜백 URL로 리다이렉트</div></div>
+  <div class="flow-step"><div class="flow-num">5</div><div>next-auth → code로 <strong>access_token</strong> 교환 (서버끼리, 노출 안 됨)</div></div>
+  <div class="flow-step"><div class="flow-num">6</div><div>next-auth → access_token으로 userinfo 조회 → profile 반환</div></div>
+  <div class="flow-step"><div class="flow-num">7</div><div>jwt callback → token에 저장 → 세션 생성</div></div>
+</div>
+<div class="box box-blue">
+  <strong>왜 code를 바로 access_token으로 안 만드냐?</strong><br/>
+  code는 URL에 노출됨(브라우저 주소창). access_token은 서버끼리만 주고받아서 노출 안 됨.<br/>
+  code는 1회용 + 수명 짧음 → 탈취해도 이미 교환 완료면 못 씀.
+</div>
+
+<h3>sub (subject identifier) 가 뭐야?</h3>
+<p>구글/카카오/네이버가 각 계정에 부여한 <strong>고유 ID</strong>. 비밀번호와 관계없이 계정 생성 시 이미 부여됨.</p>
+<pre>// 구글 로그인 수락 시 id_token 안에 들어있는 값
+{
+  sub:   "109876543210123456789",  ← 이게 구글 고유 ID (변하지 않음)
+  email: "user@gmail.com",
+  name:  "홍길동"
+}
+</pre>
+<div class="box box-blue">
+  sub는 로그인할 때 새로 만드는 게 아니라, 구글이 "이 사람 맞음" 확인 후 그 계정의 고유 번호를 앱에게 <strong>공개</strong>해주는 것.<br/>
+  어떤 소셜이든 고유 ID는 반드시 있어서 → <code>id: string</code> (required)로 Session 타입에 추가해야 함.
+</div>
+
+<h3>scope 가 뭐야?</h3>
+<p>소셜한테 <strong>"뭘 달라고 요청할지"</strong> 목록.</p>
+<pre>scope: 'openid email profile'
+// openid  → OIDC 사용 선언 (sub 받기 위해 필수)
+// email   → 이메일
+// profile → 이름, 프로필 사진</pre>
+<div class="box box-yellow">
+  로그인 목적 = 이 사람이 누군지만 알면 됨 → email + profile 이면 충분.<br/>
+  calendar, drive 같은 건 해당 기능 쓸 때만 추가. 필요 이상 요청하면 사용자가 거부할 확률 높아짐.
+</div>
+
+<h3>redirectTo vs redirect</h3>
+<table>
+  <tr><th>구분</th><th>언제 쓰나</th><th>이유</th></tr>
+  <tr><td><code>redirect('/06')</code></td><td>Next.js 서버 컴포넌트에서 직접 이동</td><td>현재 페이지에서 바로 이동</td></tr>
+  <tr><td><code>redirectTo: '/06'</code></td><td>signIn/signOut 옵션</td><td>구글 동의 화면 갔다 돌아올 경로를 미리 지정</td></tr>
+</table>
+<pre>await signIn('google', { redirectTo: '/06' })
+// signIn() 자체가 구글로 내보내는 함수 → 그 다음 줄이 실행 안 됨
+// redirect('/06') 을 뒤에 써봤자 실행 안 됨
+// 그래서 "돌아올 곳"을 redirectTo 옵션으로 미리 알려주는 것</pre>
+
+<h3>httpOnly 쿠키로 보안 처리</h3>
+<pre>authjs.session-token  → 암호화된 JWT (유저 정보 들어있음)
+                        httpOnly 쿠키에 자동 저장
+                        JavaScript로 document.cookie 해도 안 보임 (XSS 방어)
+authjs.csrf-token     → CSRF 공격 방어 토큰
+authjs.callback-url   → 로그인 후 돌아올 URL</pre>
+
+<hr class="divider"/>
+
+<!-- ═══════════════════════════════════════════════════════
+     07번
+═══════════════════════════════════════════════════════ -->
+<h2 class="page-break">07번 — Kakao Custom Provider</h2>
+<span class="badge badge-yellow">Kakao OAuth</span>
+
+<h3>왜 Custom Provider를 직접 만드나?</h3>
+<div class="box box-yellow">
+  next-auth v5에 Kakao 공식 내장 Provider가 없음.<br/>
+  <code>OAuthConfig</code> 인터페이스를 직접 구현하면 어떤 소셜이든 붙일 수 있음.<br/>
+  → 이걸 이해하면 앞으로 어떤 소셜이 추가되더라도 스스로 만들 수 있음.
+</div>
+
+<h3>import 두 가지</h3>
+<pre>import type { OAuthConfig, OAuthUserConfig } from 'next-auth/providers'
+
+// OAuthUserConfig  → 함수 파라미터 타입 (clientId, clientSecret 받는 용도)
+// OAuthConfig      → 함수 반환 타입 (next-auth가 이해하는 OAuth 설정 객체)</pre>
+
+<h3>KakaoProfile — 카카오 API 응답 구조</h3>
+<pre>interface KakaoProfile {
+  id: number                    // ← number 타입 (string 아님! 변환 필요)
+  kakao_account?: {             // 동의 안 하면 없을 수 있어서 ?
+    email?: string              // 이메일 동의 안 하면 없음
+    profile?: {                 // 프로필 동의 안 하면 없음
+      nickname?:          string
+      profile_image_url?: string
+    }
+  }
+}</pre>
+<div class="box box-yellow">
+  카카오 API가 실제로 이렇게 보내줌. 이 구조 그대로 타입으로 만든 것.<br/>
+  모든 필드가 <code>?</code> 인 이유: 사용자가 동의 화면에서 항목별로 거부할 수 있어서.
+</div>
+
+<h3>KakaoProvider 함수 — 핵심 4가지</h3>
+<pre>function KakaoProvider(options: OAuthUserConfig&lt;KakaoProfile&gt;): OAuthConfig&lt;KakaoProfile&gt; {
+  return {
+    id:   'kakao',   // next-auth가 이 provider를 식별하는 이름
+    name: 'Kakao',   // UI에 표시되는 이름
+    type: 'oauth',   // OAuth 2.0 방식
+
+    // ① 사용자를 보낼 카카오 동의 화면 URL
+    authorization: {
+      url:    'https://kauth.kakao.com/oauth/authorize',
+      params: { scope: 'profile_nickname profile_image account_email' },
+    },
+
+    // ② 동의 수락 후 받은 code → access_token 교환 URL
+    token: 'https://kauth.kakao.com/oauth/token',
+
+    // ③ access_token으로 유저 정보 조회 URL
+    userinfo: 'https://kapi.kakao.com/v2/user/me',
+
+    // ④ 카카오 응답 → next-auth 표준 User 형태로 변환
+    profile(profile) {
+      return {
+        id:    String(profile.id),                                 // number → string 변환 필수
+        name:  profile.kakao_account?.profile?.nickname  ?? null,
+        email: profile.kakao_account?.email              ?? null,
+        image: profile.kakao_account?.profile?.profile_image_url ?? null,
+      }
+    },
+
+    ...options,  // clientId, clientSecret 여기서 합쳐짐
+  }
+}</pre>
+
+<h3>왜 String(profile.id) 로 변환하나?</h3>
+<pre>// next-auth User.id 타입 = string
+// 카카오 id 타입         = number
+// 안 바꾸면 타입 에러 → String() 으로 변환 필수
+
+String(123456)  →  "123456"</pre>
+
+<h3>...options 가 뭐야?</h3>
+<pre>// providers 배열에서 이렇게 넘김
+KakaoProvider({
+  clientId:     process.env.KAKAO_CLIENT_ID,
+  clientSecret: process.env.KAKAO_CLIENT_SECRET,
+})
+
+// 이 값들이 ...options 로 반환 객체에 합쳐짐
+// clientId, clientSecret 이 없으면 카카오 서버가 우리 앱을 모름</pre>
+
+<h3>jwt / session callback</h3>
+<pre>jwt({ token, account, profile }) {
+  if (account) {
+    // account는 최초 로그인 시에만 존재 — 재방문 시 없음
+    // if (account) 없으면: 재방문 시 undefined로 덮어써서 id 사라짐
+    token.id = (profile as KakaoProfile)?.id?.toString()
+  }
+  return token
+},
+
+session({ session, token }) {
+  session.user.id = token.id as string
+  // jwt callback에서 저장한 값을 session으로 복사
+  return session
+}</pre>
+
+<h3>카카오 개발자 콘솔 설정</h3>
+<div class="box box-yellow">
+  <strong>리다이렉트 URI 등록 필수:</strong><br/>
+  <code>http://localhost:3001/07/api/auth/callback/kakao</code><br/><br/>
+  등록 안 하면 카카오가 "이 URI는 모르는 곳" 이라고 요청 거부함.<br/>
+  배포 시 도메인 주소로도 추가 등록해야 함.
+</div>
+
+<div class="interview">
+  <p class="q">Q: Custom Provider를 만들 때 필수 필드가 뭔가요?</p>
+  <p class="a">A: id, name, type, authorization(URL+scope), token(URL), userinfo(URL), profile() 함수입니다. profile()은 소셜 API 응답을 next-auth User 타입으로 변환하는 함수입니다.</p>
+  <br/>
+  <p class="q">Q: Kakao Custom Provider에서 profile() 함수의 역할은?</p>
+  <p class="a">A: 카카오 API 응답(중첩 구조)을 next-auth 표준 User 형태로 변환합니다. id가 number 타입이라 String()으로 변환이 필요합니다.</p>
+</div>
+
+<hr class="divider"/>
+
+<!-- ═══════════════════════════════════════════════════════
+     08번
+═══════════════════════════════════════════════════════ -->
+<h2 class="page-break">08번 — Naver Custom Provider</h2>
+<span class="badge badge-green">Naver OAuth</span>
+
+<h3>Kakao와 무엇이 다른가?</h3>
+<table>
+  <tr><th>구분</th><th>Kakao (07번)</th><th>Naver (08번)</th></tr>
+  <tr><td>id 타입</td><td><code>number</code> → String() 변환 필수</td><td><code>string</code> (변환 불필요)</td></tr>
+  <tr><td>응답 구조</td><td><code>profile.kakao_account.xxx</code></td><td><code>profile.response.xxx</code></td></tr>
+  <tr><td>데이터 위치</td><td>kakao_account 키 안에</td><td>response 키 안에 (한 겹 더 중첩)</td></tr>
+</table>
+
+<h3>NaverProfile — 네이버 API 응답 구조</h3>
+<pre>interface NaverProfile {
+  resultcode: string   // 응답 코드 ("00" = 성공)
+  message:    string   // 응답 메시지
+  response: {          // ← 핵심: 실제 유저 데이터가 response 키 안에 있음
+    id:             string   // ← 이미 string (String() 변환 불필요)
+    email?:         string
+    name?:          string
+    profile_image?: string
+    nickname?:      string
+  }
+}</pre>
+<div class="box box-green">
+  네이버가 응답을 <code>response</code> 키로 한 번 감싸서 보내줌.<br/>
+  카카오처럼 바로 <code>profile.id</code> 가 아니라 <code>profile.response.id</code> 로 접근해야 함.
+</div>
+
+<h3>profile() 함수 차이</h3>
+<pre>// Kakao
+profile(profile) {
+  return {
+    id:    String(profile.id),                          // 최상위에 바로 있음
+    name:  profile.kakao_account?.profile?.nickname,
+  }
+}
+
+// Naver
+profile(profile) {
+  return {
+    id:    profile.response.id,                         // response 안에 있음
+    name:  profile.response.name ?? profile.response.nickname,
+    email: profile.response.email,
+    image: profile.response.profile_image,
+  }
+}</pre>
+
+<h3>Naver OAuth URLs</h3>
+<pre>authorization: {
+  url:    'https://nid.naver.com/oauth2.0/authorize',
+  params: { scope: 'name email profile_image' }
+},
+token:    'https://nid.naver.com/oauth2.0/token',
+userinfo: 'https://openapi.naver.com/v1/nid/me'</pre>
+
+<h3>state 파라미터</h3>
+<div class="box box-green">
+  <strong>next-auth가 자동으로 처리함 — 직접 구현 불필요.</strong><br/>
+  state = CSRF 공격 방어용 랜덤 문자열. 요청 시 보내고 콜백 시 검증.<br/>
+  네이버는 state를 필수로 요구하는데, next-auth가 알아서 생성/검증해줌.
+</div>
+
+<div class="interview">
+  <p class="q">Q: Kakao와 Naver Custom Provider의 가장 큰 차이는?</p>
+  <p class="a">A: 응답 구조가 다릅니다. Kakao는 kakao_account 안에 데이터가 있고 id가 number입니다. Naver는 response 키 안에 데이터가 있고 id가 이미 string입니다.</p>
+</div>
+
+<hr class="divider"/>
+
+<!-- ═══════════════════════════════════════════════════════
+     09번
+═══════════════════════════════════════════════════════ -->
+<h2 class="page-break">09번 — Credentials + Google 복합 + 계정 연동</h2>
+<span class="badge badge-purple">복합 Provider + signIn callback</span>
+
+<h3>왜 계정 연동 문제가 생기나?</h3>
+<div class="box box-red">
+  <code>demo@example.com</code> 으로 이메일/비번으로 가입 후<br/>
+  같은 이메일의 Google 계정으로 로그인 시도<br/>
+  → <strong>같은 사람인지 다른 사람인지 판단 불가</strong><br/>
+  → next-auth: <strong>OAuthAccountNotLinked 에러</strong> 발생
+</div>
+
+<h3>Credentials vs Google Provider 차이</h3>
+<table>
+  <tr><th>구분</th><th>Credentials</th><th>Google</th></tr>
+  <tr><td>비밀번호 검증</td><td>내가 직접 (authorize 함수)</td><td>구글이 대신 처리</td></tr>
+  <tr><td>비밀번호 위치</td><td>내 서버/DB에 있음</td><td>구글만 알고 있음</td></tr>
+  <tr><td>보안 책임</td><td>내가 직접 관리</td><td>구글이 대신 관리</td></tr>
+</table>
+
+<h3>signIn callback — 로그인 허용/거부 결정</h3>
+<pre>signIn({ user, account }) {
+  // ─ 시나리오 A: Credentials 로그인 ─────────────────────────
+  // authorize()에서 이미 이메일/비번 검증 완료
+  // signIn callback에서 또 검증할 필요 없음 → 무조건 허용
+  if (account?.provider === 'credentials') return true
+
+  // ─ 시나리오 B: Google 로그인 ──────────────────────────────
+  // 이 이메일로 이미 가입된 Credentials 계정 있는지 확인
+  const existingUser = MOCK_USERS.find(u => u.email === user.email)
+
+  if (!existingUser) {
+    return true   // 새 사용자 → 허용
+  }
+
+  // 이미 이메일/비번으로 가입된 계정 → 연동 거부
+  // /09?error=OAuthAccountNotLinked 로 리다이렉트
+  return '/09?error=OAuthAccountNotLinked'
+}</pre>
+
+<h3>signIn callback 반환값 의미</h3>
+<table>
+  <tr><th>반환값</th><th>동작</th></tr>
+  <tr><td><code>true</code></td><td>로그인 허용</td></tr>
+  <tr><td><code>false</code></td><td>로그인 거부 (에러 페이지로)</td></tr>
+  <tr><td><code>'/path'</code></td><td>해당 경로로 리다이렉트 (?error= 쿼리 포함 가능)</td></tr>
+</table>
+
+<h3>page.tsx에서 에러 감지</h3>
+<pre>// ?error=OAuthAccountNotLinked 쿼리를 searchParams로 감지
+interface Props {
+  searchParams: Promise&lt;{ error?: string }&gt;
+}
+
+export default async function Page({ searchParams }: Props) {
+  const { error } = await searchParams
+
+  // 에러 있으면 안내 메시지 표시
+  {error === 'OAuthAccountNotLinked' && (
+    &lt;div&gt;이미 이메일/비밀번호로 가입된 계정입니다. 이메일 로그인을 이용해주세요.&lt;/div&gt;
+  )}
+}</pre>
+<div class="box box-purple">
+  <strong>에러가 어떻게 오냐?</strong><br/>
+  signIn callback에서 <code>return '/09?error=OAuthAccountNotLinked'</code> 로 리다이렉트<br/>
+  → URL에 <code>?error=OAuthAccountNotLinked</code> 가 붙음<br/>
+  → page.tsx의 searchParams로 읽어서 에러 메시지 표시
+</div>
+
+<h3>실무에서는?</h3>
+<div class="box box-gray">
+  Prisma Adapter 쓰면 <code>linkAccount()</code> 로 같은 이메일 계정 자동 연동 가능.<br/>
+  09번 예제는 MOCK_USERS로 단순화. DB 없이 배열로 유저 관리.
+</div>
+
+<div class="interview">
+  <p class="q">Q: OAuthAccountNotLinked 에러란?</p>
+  <p class="a">A: 이미 다른 방식(Credentials 등)으로 가입된 이메일로 소셜 로그인을 시도할 때 발생합니다. signIn callback에서 직접 처리하거나 allowDangerousEmailAccountLinking 옵션으로 허용할 수 있습니다.</p>
+  <br/>
+  <p class="q">Q: signIn callback에서 credentials와 google을 다르게 처리하는 이유는?</p>
+  <p class="a">A: Credentials는 authorize()에서 이미 검증을 마쳤기 때문에 signIn callback에서 추가 검증이 불필요합니다. Google은 이메일 중복 여부를 signIn callback에서 판단해야 합니다.</p>
+</div>
+
+<hr class="divider"/>
+
+<!-- ═══════════════════════════════════════════════════════
+     10번
+═══════════════════════════════════════════════════════ -->
+<h2 class="page-break">10번 — session.provider 저장</h2>
+<span class="badge badge-blue">jwt → session 흐름 완성</span>
+
+<h3>왜 provider를 session에 저장하나?</h3>
+<div class="box box-blue">
+  로그인 후 어떤 소셜로 연결됐는지 UI에서 표시하려면 <code>session.provider</code> 가 필요함.<br/>
+  없으면 <strong>"Google로 연결됨"</strong> 같은 표시를 할 수 없음.<br/>
+  소셜 API 직접 호출할 때 어떤 토큰인지 구분할 때도 필요.
+</div>
+
+<h3>types.ts — Session + JWT 타입 확장</h3>
+<pre>declare module 'next-auth' {
+  interface Session {
+    provider: string   // 어떤 소셜로 로그인했는지 ('google' | 'kakao' 등)
+    user: {
+      id: string       // optional → required 로 강화
+    } & DefaultSession['user']  // name, email, image는 원본에서 가져옴
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    id?:       string
+    provider?: string   // token에도 저장해야 session으로 넘길 수 있음
+  }
+}</pre>
+
+<h4>왜 &amp; DefaultSession['user'] 를 붙이나?</h4>
+<pre>// 안 붙이면
+user: { id: string }
+// → name, email, image 가 사라짐
+// → session.user.email 쓰면 타입 에러
+
+// 붙이면
+user: { id: string } & { name?, email?, image? }
+// → 전부 사용 가능</pre>
+
+<h4>왜 id를 따로 추가하나?</h4>
+<pre>// DefaultSession['user'] 원본
+id?: string     ← optional (있을 수도 없을 수도)
+
+// 우리가 강화
+id: string      ← required (반드시 있음)
+
+// optional 그대로 쓰면
+session.user.id.toUpperCase()   // ❌ 타입 에러
+session.user.id?.toUpperCase()  // ✅ ?. 붙여야 함
+
+// required 로 강화하면
+session.user.id.toUpperCase()   // ✅ 바로 씀</pre>
+
+<h3>jwt → session 흐름</h3>
+<pre>// STEP 1: jwt callback — 최초 로그인 시 token에 저장
+jwt({ token, account, profile }) {
+  if (account) {
+    // account는 최초 로그인 시에만 존재
+    // 재방문 시 없음 → if (account) 로 감싸야 함
+    token.provider = account.provider    // 'google', 'kakao', 'naver' 등
+    token.id       = profile?.sub ?? user?.id
+  }
+  return token
+},
+
+// STEP 2: session callback — token에서 session으로 복사
+session({ session, token }) {
+  session.provider    = token.provider ?? ''
+  session.user.id     = token.id as string
+  return session
+}</pre>
+
+<h3>실행 순서</h3>
+<table>
+  <tr><th>시점</th><th>실행</th><th>하는 일</th></tr>
+  <tr><td>로그인 시 (최초 1회)</td><td>jwt callback</td><td>account.provider → token.provider 저장</td></tr>
+  <tr><td>세션 읽을 때마다</td><td>session callback</td><td>token.provider → session.provider 복사</td></tr>
+</table>
+
+<div class="box box-blue">
+  <strong>왜 jwt callback → session callback 순서인가?</strong><br/>
+  JWT 전략에서 session을 읽을 때:<br/>
+  1. jwt callback으로 token을 먼저 만들거나 갱신<br/>
+  2. session callback에서 그 token을 받아 session 객체로 변환<br/>
+  → token에 저장 안 하면 session에 넣을 수 없음
+</div>
+
+<h3>page.tsx에서 사용</h3>
+<pre>const providerLabel: Record&lt;string, string&gt; = {
+  google: 'Google',
+  kakao:  'Kakao',
+  naver:  'Naver',
+}
+
+// "Google로 연결됨" 표시
+&lt;p&gt;{providerLabel[session.provider]}로 연결됨&lt;/p&gt;</pre>
+
+<div class="interview">
+  <p class="q">Q: jwt callback과 session callback의 실행 시점 차이는?</p>
+  <p class="a">A: jwt callback은 로그인/토큰 갱신 시마다 실행되고, session callback은 session을 읽을 때마다 실행됩니다. JWT 전략에서 session()은 DB 조회 없이 token만 파싱합니다.</p>
+  <br/>
+  <p class="q">Q: JWT 타입을 확장하는 이유는?</p>
+  <p class="a">A: token['provider'] 처럼 문자열 인덱스로 쓰면 타입 불안정합니다. declare module로 확장하면 token.provider 로 타입 안전하게 접근 가능합니다.</p>
+</div>
+
+<hr class="divider"/>
+
+<!-- ═══════════════════════════════════════════════════════
+     전체 요약
+═══════════════════════════════════════════════════════ -->
+<h2 class="page-break">전체 흐름 요약</h2>
+
+<h3>07~10번 핵심 비교</h3>
+<table>
+  <tr><th>번호</th><th>핵심 주제</th><th>새로 배운 것</th></tr>
+  <tr><td>07</td><td>Kakao Custom Provider</td><td>OAuthConfig 구현, id number→string 변환, profile() 함수</td></tr>
+  <tr><td>08</td><td>Naver Custom Provider</td><td>response 중첩 구조, Kakao와 구조 차이</td></tr>
+  <tr><td>09</td><td>계정 연동 처리</td><td>signIn callback, OAuthAccountNotLinked, searchParams 에러 처리</td></tr>
+  <tr><td>10</td><td>session.provider</td><td>declare module 타입 확장, jwt→session 흐름, provider UI 표시</td></tr>
+</table>
+
+<h3>소셜 로그인을 쓰는 이유</h3>
+<table>
+  <tr><th>사용자 입장</th><th>개발자 입장</th></tr>
+  <tr><td>새 아이디/비번 안 만들어도 됨</td><td>bcrypt 직접 구현 불필요</td></tr>
+  <tr><td>비번 기억 안 해도 됨</td><td>비번 분실 처리 불필요</td></tr>
+  <tr><td>빠른 로그인</td><td>해킹 당해도 비번 유출 없음</td></tr>
+</table>
+
+<h3>OAuth 전체 흐름 (공통)</h3>
+<pre>1.  "소셜로 로그인" 버튼 클릭
+2.  소셜 동의 화면으로 이동
+3.  수락 → code 발급 → 콜백 URL로 리다이렉트
+          http://localhost:3001/07/api/auth/callback/kakao
+4.  next-auth: code → access_token 교환 (서버끼리, URL에 노출 안 됨)
+5.  next-auth: access_token → userinfo 조회 → profile 반환
+6.  profile() 함수: 소셜 응답 → next-auth User 변환
+7.  jwt callback: user.id (또는 profile.sub) → token.id 저장
+8.  session callback: token → session 복사
+9.  auth(): 쿠키에서 JWT 복호화 → session 반환
+10. page.tsx: session.user.id, session.provider 사용</pre>
+
+<h3>다음 번호로 넘어가는 기준</h3>
+<div class="box box-gray">
+  ✅ 이 인증 흐름이 왜 이렇게 동작하는지 말로 설명할 수 있다<br/>
+  ✅ 비슷한 상황에서 이 패턴을 떠올릴 수 있다<br/>
+  ✅ 면접 포인트 Q에 A를 보지 않고 대답할 수 있다<br/>
+  → 다음 번호로 이동<br/><br/>
+  ❌ 코드가 어떻게 동작하는지는 알지만 왜 이렇게 짰는지 모른다<br/>
+  → auth.config.ts 설계 고민 주석 다시 읽기
+</div>
+
+<p style="margin-top:44px; color:#9CA3AF; font-size:12px; text-align:center;">
+  auth-100 학습 정리 — 07~10번 | 출력일: 2026-04-30
+</p>
+
+</body>
+</html>

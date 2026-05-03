@@ -7,8 +7,7 @@ export interface Todo {
 
 export type FilterType = 'all' | 'active' | 'completed'
 
-// 04번 대비 추가: LOAD — localStorage에서 불러올 때 사용
-// 투두 리스트 앱에서 어떤 변화를 일으킬 수 있는지 목록을 정의 한것 
+// ← SET_FILTER 없음 — filter는 context의 useState로 관리 (reducer 밖)
 export type TodoAction =
   | { type: 'ADD'; text: string }
   | { type: 'TOGGLE'; id: string }
@@ -16,5 +15,4 @@ export type TodoAction =
   | { type: 'EDIT'; id: string; text: string }
   | { type: 'CLEAR_COMPLETED' }
   | { type: 'TOGGLE_ALL' }
-  | { type: 'SET_FILTER'; filter: FilterType }
   | { type: 'LOAD'; todos: Todo[] }
