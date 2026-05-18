@@ -6,7 +6,7 @@ import java.util.Map;
 
 // 구글 구현체 (규칙 이행)
 @RequiredArgsConstructor
-public class GoogleOAuth2UserInfo implements  OAuth2UserInfo {
+public class GoogleOAuth2UserInfo implements OAuth2UserInfo {
 
     private final Map<String, Object> attributes;
 
