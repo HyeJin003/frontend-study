@@ -1,0 +1,23 @@
+spring:
+  application:
+    name:myproject
+  datasource:
+    url:jdbc:mysql://localhost:3306/myproject
+    username:root
+    password:root
+    driver-class-name:com.mysql.cj.jdbc.Driver
+  jpa:
+#    jpa 안쓸경우 sql 을 직접 다짜야함
+#    QueryDSL 동적 쿼리,JPA 기본 CRUD ,- @Query로 JPQL 상황에 맞게 쓸수 있게
+    hibernate:
+      ddl-auto: update
+#      Hibernate한테 "DB 스키마(테이블)를 자동으로 어떻게 관리할래?
+    show-sql: true
+#      역할: Hibernate가 실행하는 SQL을 콘솔(IntelliJ 하단 Run 창)에 출력.
+    properties:
+      hibernate:
+        format_sql: true
+jwt:
+  secret: "YEx0pt070IgU0GFnH4H/Ba9Jg5EtUKpUfUcIvmNhfHI=" # JWT 만들 때 이 키 써
+  access-expiration: 3600000    # 유효기간 1시간
+  refresh-expiration: 604800000
