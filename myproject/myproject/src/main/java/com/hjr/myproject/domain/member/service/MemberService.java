@@ -2,6 +2,7 @@ package com.hjr.myproject.domain.member.service;
 
 import com.hjr.myproject.domain.member.dto.ChangePasswordRequestDto;
 import com.hjr.myproject.domain.member.dto.MemberResponseDto;
+import com.hjr.myproject.domain.member.dto.PublicMemberProfileDto;
 import com.hjr.myproject.domain.member.dto.UpdateProfileRequestDto;
 import com.hjr.myproject.domain.member.entity.Member;
 import com.hjr.myproject.domain.member.repository.MemberRepository;
@@ -13,6 +14,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -40,7 +44,16 @@ public class MemberService {
         Member member =  memberRepository.findByEmail(email)
                 .orElseThrow(() -> new CustomException(ErrorCode.USER_NOT_FOUND));
 
-        member.updateNickname(dto.getNickname());
+
+        if(dto.getNickname() != null){
+            member.updateNickname(dto.getNickname());
+        }
+
+        if (dto.getBio() != null) {
+            member.updateBio(dto.getBio());
+        }
+
+
         memberRepository.save(member);
         return MemberResponseDto.from(member);
 
@@ -85,5 +98,25 @@ public class MemberService {
 
         refreshTokenRepository.deleteByMember(member);
         memberRepository.delete(member);
+    }
+    public PublicMemberProfileDto getPublicProfile(String nickname) {
+
+            Member member =  memberRepository.findByNickname(nickname)
+                    .orElseThrow(()-> new CustomException(ErrorCode.USER_NOT_FOUND));
+
+            return PublicMemberProfileDto.from(member);
+
+    }
+
+    public List<PublicMemberProfileDto> searchByNickname(String nickname){
+        // 1. memberRepository.findByNicknameContaining(nickname) 으로 목록 조회
+        // 2. 각 Member를 PublicMemberProfileDto.from() 으로 변환
+        // 3. 반환
+
+        List<Member> members = memberRepository.findByNicknameContaining(nickname);
+        return members.stream()
+                .map(PublicMemberProfileDto::from)
+                .collect(Collectors.toList());
+
     }
 }

@@ -1,4 +1,4 @@
 package com.hjr.myproject.domain.guestbook.dto;
 
-public class GuestbookRequestDto {
+public class GuestbookPageResponseDto {
 }

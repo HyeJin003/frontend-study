@@ -158,9 +158,13 @@ B 멘토님, 이 부분 프론트에서 어떻게 받을지 한마디 해주실�
 | 토큰 재발급/로그아웃 | `domain/member/service/AuthService.java` |
 | OAuth2 소셜로그인 (Google/Kakao/Naver) | `global/oauth2/` |
 | 회원 정보 조회/수정/비밀번호 변경/탈퇴 | `domain/member/service/MemberService.java` |
-| 공통 응답/예외처리 | `global/exception/`, `global/common/ApiResponse.java` |
+| 공통 응답/예외처리 (CustomException → 실제 HTTP 상태코드 매핑 포함) | `global/exception/`, `global/common/ApiResponse.java` |
 | Spring Security + JWT 필터 | `config/SecurityConfig.java`, `global/jwt/` |
 | Swagger 문서화 | `config/SwaggerConfig.java` |
+| 방명록(Guestbook) CRUD | `domain/guestbook/` |
+| 글(Post) 작성/목록/단건/수정/삭제 — 페이징, 조회수, isPublic 필터, 작성자 권한 체크 | `domain/post/service/PostService.java`, `domain/post/controller/PostController.java` |
+| 추천/비추천(PostLike) 토글 — 재호출 시 취소, 다른 타입 누르면 변경, COUNT 응답 | `domain/post/entity/PostLike.java`, `domain/post/repository/PostLikeRepository.java` |
+| 댓글(Comment) 작성/목록/삭제 — 글 기준 페이징, 작성자 권한 체크 | `domain/comment/` |
 
 ---
 
@@ -170,16 +174,27 @@ B 멘토님, 이 부분 프론트에서 어떻게 받을지 한마디 해주실�
 ✅ 완성
   - 회원가입 / 로그인 / JWT / OAuth2 소셜로그인
   - 회원 정보 CRUD (조회/수정/비밀번호 변경/탈퇴)
+  - Guestbook CRUD (방명록)
+  - Post 작성/목록/단건/수정/삭제 (페이징, 조회수, 작성자 권한 체크)
+  - PostLike 추천/비추천 토글 (재호출 취소, 타입 변경, COUNT 응답)
+  - Comment 작성/목록/삭제 (글 기준 페이징, 작성자 권한 체크)
+
+⏸ 보류
+  TimeCapsule  entity ✅ / repository ✅ / dto(Request) ✅ / dto(Response) ⬜ / service ⬜ / controller ⬜
+  → 방향 미결정: 기념일 방식(당일만 표시 후 사라짐) vs 영구 공개 방식(열리면 계속 보임)
+  → 아이디어 정리 후 재개
+
+🔄 진행 중 (다음 작업)
+  1단계  미니홈피 API           GET /api/members/{nickname} — 프로필 조회 ⬜
+                                GET /api/members/search?nickname= — 닉네임 검색 ⬜
+                                GET /api/posts/user/{nickname} — 유저별 공개 글 목록 ⬜
 
 🚧 진행 예정 (Haroom 핵심 기능)
-  1단계  Post CRUD              글 작성/조회/수정/삭제, 페이징, 조회수, 추천
-  2단계  Comment CRUD           댓글 (Post ↔ Comment 연관관계)
-  3단계  Guestbook CRUD         방명록 (익명 처리 + 권한 체크)
-  4단계  TimeCapsule CRUD       날짜 잠금 글 (open_at 날짜 비교)
-  5단계  Scheduler              타임캡슐 자동공개 + 랜덤매칭 만료 (@Scheduled)
-  6단계  RandomMatch            매일 랜덤 1명 매칭 + 24시간 후 만료
-  7단계  Friendship             친구 신청/수락/거절 (PENDING → ACCEPTED)
-  8단계  프론트엔드              React + API 연결
+  2단계  RandomMatch            매일 랜덤 1명 매칭 + 24시간 후 만료 (익명 + 제한 공개)
+  3단계  Friendship             친구 신청/수락/거절 (PENDING → ACCEPTED)
+  4단계  Scheduler              랜덤매칭 만료 + (TimeCapsule 방향 결정 후) 자동공개
+  5단계  Post 마무리            인기글 TOP5 (프론트 붙일 때 추가)
+  6단계  프론트엔드              React + API 연결
 ```
 
 ---
@@ -246,21 +261,32 @@ UNIQUE KEY (from_member_id, to_member_id)   ← 중복 신청 방지
 | GET | /api/auth/me | Bearer | 내 정보 |
 | GET/PUT/DELETE | /api/members/me | Bearer | 회원 정보 관리 |
 | GET | /oauth2/authorization/{provider} | - | 소셜 로그인 |
+| POST/GET/DELETE | /api/guestbook/{nickname} | POST는 Bearer | 방명록 CRUD |
+| POST | /api/posts | Bearer | 글 작성 |
+| GET | /api/posts | 불필요 | 글 목록 (공개글만, 페이징) |
+| GET | /api/posts/{id} | 불필요 | 글 단건 조회 (조회수 증가, 비공개 글 차단) |
+| PUT | /api/posts/{id} | Bearer | 글 수정 (작성자 본인만, 부분 수정) |
+| DELETE | /api/posts/{id} | Bearer | 글 삭제 (작성자 본인만) |
+| POST | /api/posts/{id}/like | Bearer | 추천 토글 (재호출 시 취소) |
+| POST | /api/posts/{id}/dislike | Bearer | 비추 토글 (재호출 시 취소) |
+| POST | /api/posts/{postId}/comments | Bearer | 댓글 작성 |
+| GET | /api/posts/{postId}/comments | 불필요 | 댓글 목록 (페이징) |
+| DELETE | /api/posts/{postId}/comments/{id} | Bearer | 댓글 삭제 (작성자만) |
 
 ### 구현 예정 API
-| Method | URL | 설명 |
-|--------|-----|------|
-| POST/GET/PUT/DELETE | /api/posts | 글 CRUD |
-| GET | /api/posts/popular | 오늘의 인기글 TOP5 |
-| GET | /api/posts/user/{nickname} | 특정 유저 글 목록 |
-| POST | /api/posts/{id}/like | 추천 (재호출 시 취소) |
-| POST | /api/posts/{id}/dislike | 비추 (재호출 시 취소) |
-| GET | /api/posts/{id}/like/count | 추천수/비추수 조회 |
-| POST/GET/DELETE | /api/posts/{postId}/comments | 댓글 CRUD |
-| POST/GET/DELETE | /api/guestbook/{nickname} | 방명록 CRUD |
-| POST/GET | /api/timecapsule | 타임캡슐 CRUD |
-| POST/GET/DELETE | /api/match | 랜덤매칭 |
-| POST/PUT/GET | /api/friends | 친구 관리 |
+| Method | URL | 인증 | 설명 |
+|--------|-----|------|------|
+| GET | /api/members/{nickname} | 불필요 | 미니홈피 프로필 조회 (닉네임, 한마디, 사진) |
+| GET | /api/members/search | 불필요 | 닉네임 검색 → 미니홈피 전체 공개 |
+| GET | /api/posts/user/{nickname} | 불필요 | 특정 유저 공개 글 목록 |
+| GET | /api/posts/popular | 불필요 | 오늘의 인기글 TOP5 |
+| POST/GET | /api/timecapsule | Bearer/불필요 | 타임캡슐 CRUD (방향 결정 후) |
+| POST | /api/match | Bearer | 랜덤매칭 생성 (하루 1회) |
+| GET | /api/match/today | Bearer | 오늘의 매칭 상대 조회 (익명 프로필) |
+| DELETE | /api/match/{id} | Bearer | 매칭 거절/종료 |
+| POST | /api/friends/{nickname} | Bearer | 친구 신청 |
+| PUT | /api/friends/{id} | Bearer | 친구 수락/거절 |
+| GET | /api/friends | Bearer | 친구 목록 |
 
 ---
 
@@ -278,10 +304,12 @@ src/main/java/com/hjr/myproject/
 │   │   ├── dto/
 │   │   ├── service/   AuthService.java, MemberService.java
 │   │   └── controller/ AuthController.java, MemberController.java
-│   ├── post/                     🚧 1단계 (Post.java + PostLike.java)
-│   ├── comment/                  🚧 2단계
-│   ├── guestbook/                🚧 3단계
-│   ├── timecapsule/              🚧 4단계
+│   ├── post/                     ✅ 완성 (Post + PostLike + 추천/비추천)
+│   ├── comment/                  ✅ 완성 (Comment CRUD)
+│   ├── guestbook/                ✅ 완성
+│   ├── timecapsule/              🔄 진행 중
+│   │   ├── entity/   TimeCapsule.java ✅
+│   │   └── repository/ TimeCapsuleRepository.java ✅
 │   ├── match/                    🚧 6단계
 │   └── friendship/               🚧 7단계
 └── global/                       ✅ 완성
@@ -430,6 +458,42 @@ implementation 'org.springframework.ai:spring-ai-anthropic-spring-boot-starter'
 ## 다음 세션 시작 방법
 "[N]단계까지 완료했어, 다음 단계 알려줘" 라고 하면 바로 이어서 진행
 
-**현재 다음 작업: 1단계 — Post 엔티티 만들기**
-`domain/post/entity/Post.java` 생성. Member.java 패턴 참고해서 posts 테이블 컬럼 그대로 필드로 채우기.
-이후 `domain/post/entity/PostLike.java` 생성 (post_likes 테이블, UNIQUE KEY 포함).
+**현재 진행 중: 미니홈피 API**
+- ⬜ `MemberController.java`에 GET /api/members/{nickname} 추가
+- ⬜ `MemberController.java`에 GET /api/members/search 추가
+- ⬜ `PostController.java`에 GET /api/posts/user/{nickname} 추가
+- 위 3개 완성 후 → RandomMatch → Friendship 순서
+
+**TimeCapsule 보류 사항:**
+- TimeCapsuleRequest.java ✅ 완성
+- TimeCapsuleResponse.java ⬜ 미완성
+- 방향 결정 필요: 기념일 방식(당일만) vs 영구 공개 방식
+- 아이디어 생기면 재개
+
+**랜덤매칭 설계 확정 (개발 전 참고):**
+```
+매칭 시 보여주는 것:
+  닉네임: "별빛**" (뒷부분 마스킹)
+  한마디: 전체 공개
+  공개 글: 최근 3개, 제목 + 50자 미리보기만
+  프로필 사진: 블러 처리
+
+매칭 중 가능한 행동:
+  댓글 달기   ✅ (이미 구현됨)
+  방명록 남기기 ✅ (이미 구현됨)
+  친구 신청   → 매칭 안에서만 가능 (검색으로 찾기 불가)
+
+상대가 받는 것:
+  "랜덤매칭 상대가 내 글에 댓글을 달았어요" 알림
+  댓글/방명록에 "랜덤매칭 상대" 뱃지 표시
+  → 호기심 → 친구 수락
+
+24시간 후 만료 → 친구 신청 안 하면 연결 끊김
+```
+
+**완성된 패턴 (재사용 가능):**
+- JWT → email → member 조회
+- 작성자 권한 체크: `entity.getMember().getId().equals(member.getId())`
+- JPA Dirty Checking: setter 없이 도메인 메서드로 값 변경
+- CustomException + ErrorCode 조합
+- Repository 메서드 이름 규칙: `findBy필드And필드`, `countBy필드And필드`
