@@ -34,11 +34,7 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String refreshToken =  jwtProvider.generateRefreshToken(member.getEmail());
 
         // 4. 응답에 토큰 담기
-        response.setContentType("application/json");
-        response.setCharacterEncoding("UTF-8");
-        response.getWriter().write( "{\"accessToken\":\"" + accessToken + "\"," +
-                "\"refreshToken\":\"" + refreshToken + "\"}");
-
+        response.sendRedirect("http://localhost:3000/auth/callback?token=" + accessToken);
     }
 }
 //

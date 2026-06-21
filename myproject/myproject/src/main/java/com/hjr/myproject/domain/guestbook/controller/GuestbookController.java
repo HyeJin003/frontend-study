@@ -1,5 +1,6 @@
 package com.hjr.myproject.domain.guestbook.controller;
 
+import com.hjr.myproject.domain.guestbook.dto.GuestbookPageResponseDto;
 import com.hjr.myproject.domain.guestbook.dto.GuestbookRequestDto;
 import com.hjr.myproject.domain.guestbook.dto.GuestbookResponseDto;
 import com.hjr.myproject.domain.guestbook.service.GuestbookService;
@@ -32,10 +33,10 @@ public class GuestbookController {
 
     @Operation(summary = "방명록 조회")
     @GetMapping("/{nickname}")
-    public ResponseEntity<ApiResponse<List<GuestbookResponseDto>>> getGuestbooks(
-            @PathVariable String nickname) {
+    public ResponseEntity<ApiResponse<GuestbookPageResponseDto>> getGuestbooks(
+            @PathVariable String nickname , @RequestParam (required = false) Long cursor ,  @RequestParam(defaultValue = "5") int size) {
 
-        List<GuestbookResponseDto> result = guestbookService.getGusetbooks(nickname);
+        GuestbookPageResponseDto result = guestbookService.getGuestbooks(nickname,cursor,size );
         return ResponseEntity.ok(ApiResponse.success("방명록 조회 성공", result));
     }
 

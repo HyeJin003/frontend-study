@@ -22,9 +22,9 @@ public class JwtProvider {
     private long refreshExpiration;
 
 
-    // 1. Access Token 생성
-    public String generateAccessToken(String email, String role){
-        return Jwts.builder()
+        // 1. Access Token 생성
+        public String generateAccessToken(String email, String role){
+            return Jwts.builder()
                 .subject(email) //내용설정
                 .claim("role", role) //커스텀 클레임
                 .issuedAt(new Date())

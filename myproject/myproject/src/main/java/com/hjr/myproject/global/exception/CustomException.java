@@ -1,5 +1,8 @@
 package com.hjr.myproject.global.exception;
 
+import lombok.Getter;
+
+@Getter
 public class CustomException extends RuntimeException {
 
     private final ErrorCode errorCode;

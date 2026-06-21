@@ -33,6 +33,12 @@ public class Member {
         this.password = password;
     }
 
+    public void updateBio(String bio){this.bio = bio;}
+
+    public void updateProfileImage(String profileImage){
+        this.profileImage = profileImage;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -45,4 +51,9 @@ public class Member {
     private AuthProvider provider;
     @CreatedDate
     private LocalDateTime createdAt;
+    @Column(name="profile_image")
+    private String profileImage;
+    @Column(length = 200)
+    private String bio;
+
 }

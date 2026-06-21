@@ -43,6 +43,9 @@ public class SecurityConfig {
             //STATELESS  → 세션 아예 안 만들어 (JWT 방식)
             .authorizeHttpRequests(auth -> auth
                     .requestMatchers(HttpMethod.GET, "/api/members/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/guestbook/*").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/posts").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/posts/*").permitAll()
             //HTTP 요청마다 "이 URL은 누가 접근할 수 있어?" 규칙
             .requestMatchers(
                     "/api/auth/signup",
