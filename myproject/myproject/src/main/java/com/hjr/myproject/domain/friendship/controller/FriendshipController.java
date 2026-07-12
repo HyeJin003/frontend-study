@@ -17,31 +17,27 @@ public class FriendshipController {
 
     private final FriendshipService friendshipService;
 
-    @Operation(summary="친구 목록")
+    @Operation(summary = "친구 신청")
     @PostMapping("{nickname}")
-    public ResponseEntity<ApiResponse<FriendshipResponse>> sendFriend(
-            @RequestHeader("Authorization") String bearToken,  @PathVariable String nickname
-    ){
-        String accessToken =  bearToken.substring(7);
-        FriendshipResponse result =  friendshipService.sendFriend(accessToken,nickname);
+    public ResponseEntity<ApiResponse<FriendshipResponse>> sendFriend(@RequestHeader("Authorization")String bearToken , @PathVariable String nickname){
 
-        return ResponseEntity.ok(ApiResponse.success("친구 성공", result));
+            String accessToken = bearToken.substring(7);
+
+            FriendshipResponse result = friendshipService.sendFriend(accessToken, nickname);
+
+            return ResponseEntity.ok(ApiResponse.success("친구 성공", result));
     }
 
+    @Operation(summary = "친구 신청 수락 / 거절")
+@PutMapping("{id}")
+public ResponseEntity<ApiResponse<Void>> responseFriend(@RequestHeader("Authorization")String bearToken, @PathVariable Long id, boolean accept){
 
-    @Operation(summary="친구 요청 ")
-    @PutMapping("{id}")
-    public ResponseEntity<ApiResponse<Void>> responseFriend(
-            @RequestHeader("Authorization") String bearToken
-            ,@PathVariable Long id , boolean accept
-    ){
-        String accessToken =  bearToken.substring(7);
+        String accessToken = bearToken.substring(7);
 
-        friendshipService.responseFriend(accessToken, id, accept);
+        friendshipService.responseFriend(accessToken, id , accept);
+    return ResponseEntity.ok(ApiResponse.success("친구 요청 처리 완료", null));
 
-        return ResponseEntity.ok(ApiResponse.success("친구 요청 처리 완료", null));
-
-    }
+}
 
     @Operation(summary="친구 삭제 ")
     @DeleteMapping("{id}")
