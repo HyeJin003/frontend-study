@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 import java.util.Optional;
 
 
@@ -170,6 +172,12 @@ public class PostService {
 
         Page<Post> posts = postRepository.findByMemberAndIsPublicTrue(member, pageable);
         return posts.map(post -> PostResponse.from(post));
+
+    }
+    public List<PostResponse> getPopularPosts(){
+
+        List<Post> posts = postRepository.findTop5ByIsPublicTrueOrderByViewCountDesc();
+        return posts.stream().map(post -> PostResponse.from(post)).toList();
 
     }
 

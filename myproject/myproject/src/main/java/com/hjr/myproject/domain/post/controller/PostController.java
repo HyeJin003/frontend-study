@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/posts")
 @RequiredArgsConstructor
@@ -111,6 +113,15 @@ public class PostController {
 
         Page<PostResponse> response = postService.getUserPosts(nickname, pageable);
         return ResponseEntity.ok(ApiResponse.success("유저별", response));
+
+    }
+    @Operation(summary = "Top5글")
+    @GetMapping("/popular")
+    public  ResponseEntity<ApiResponse<List<PostResponse>>> getPopularPosts(){
+
+
+        List<PostResponse> response = postService.getPopularPosts();
+        return ResponseEntity.ok(ApiResponse.success("top5 글목록 ", response));
 
     }
 }

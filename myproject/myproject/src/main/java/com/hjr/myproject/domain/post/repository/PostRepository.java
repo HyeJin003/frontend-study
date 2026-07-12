@@ -7,10 +7,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
 
-public interface PostRepository extends JpaRepository<Post,Long> {
 
-       Page<Post> findByIsPublicTrueOrderByCreatedAtDesc(Pageable pageable);
+//     and 는 조건을 하나 더 추가한다 의미
+    public interface PostRepository extends JpaRepository<Post,Long> {
 
-    Page<Post> findByMemberAndIsPublicTrue(Member member, Pageable pageable);
+           Page<Post> findByIsPublicTrueOrderByCreatedAtDesc(Pageable pageable);
+
+        Page<Post> findByMemberAndIsPublicTrue(Member member, Pageable pageable);
+
+        List<Post> findTop5ByIsPublicTrueOrderByViewCountDesc();
 }
